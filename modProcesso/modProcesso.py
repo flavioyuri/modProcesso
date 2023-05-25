@@ -464,8 +464,8 @@ def convertToListOfTraces(file_xes, max_traces=-1, sort=False):
           l = []
           for event_index, event in enumerate(case):
               l.append(log[case_index][event_index]["concept:name"])
-          if(lLog.__contains__(l) is False):
-              lLog.append(l)
+          #if(lLog.__contains__(l) is False):
+          lLog.append(l)
       if(sort is True):
           lLog.sort()
       return lLog
