@@ -314,7 +314,7 @@ def nfaBB_to_bpmn(nfa, remove_unnecessary_gateways=True):
         elif s!=s_aux and s in subprocessSub and s_aux in subprocessSub:
           flow = BPMN.SequenceFlow(subprocessSub[s], subprocessSub[s_aux])
           bpmn.add_flow(flow)    
-        
+
     for s in sub.acceptStates:
       end_eventsSub[s] = BPMN.EndEvent(name='e_'+s)
       flow = BPMN.SequenceFlow(gatewaysSub[s],end_eventsSub[s])
@@ -464,8 +464,8 @@ def convertToListOfTraces(file_xes, max_traces=-1, sort=False):
           l = []
           for event_index, event in enumerate(case):
               l.append(log[case_index][event_index]["concept:name"])
-          #if(lLog.__contains__(l) is False):
-          lLog.append(l)
+          if(lLog.__contains__(l) is False):
+              lLog.append(l)
       if(sort is True):
           lLog.sort()
       return lLog
@@ -553,8 +553,8 @@ def convertCSVToListOfTraces(file_csv, case_id, activity, time_timestamp, max_tr
         l = []
         for event_index, event in enumerate(case):
             l.append(log[case_index][event_index]["concept:name"])
-        if(lLog.__contains__(l)==False):
-            lLog.append(l)
+        #if(lLog.__contains__(l)==False):
+        lLog.append(l)
     if(sort==True):
         lLog.sort()
     return lLog
@@ -793,31 +793,39 @@ def colapsaSequencias(automato, sequencias, tamanhoMinimo=5, tamanhoMaximo=10):
   aux.set_epsilon_closure()
   return aux
 
-def removeElementos(lista1, lista2, minimoIgual, inicio):
-  if len(lista1) < len(lista2):
-    iguais = []
-    for i in range(1, len(lista2)-len(lista1)):
+def removeElementos(lista1, lista2, estadosLista2, minimoIgual, inicio, fins):
+  if len(lista1) >= minimoIgual:
+    if len(lista1) < len(lista2):
+      iguais = []
+      for i in range(1, len(lista2)-len(lista1)):
+        igual = True
+        for j in range(len(lista1)):
+          if lista2[i + j] != lista1[j]:
+            igual = False
+            break
+          else:
+            if estadosLista2[i + j] != inicio and estadosLista2[i + j +1] not in fins:
+              iguais.append(lista1[j])
+            continue
+        if igual and len(iguais) >= minimoIgual and i > 0 and j < len(lista2):
+          return True, i, j
+        elif not igual:
+          iguais = []
+          
+    elif len(lista1) == len(lista2):
       igual = True
-      for j in range(len(lista1)):
-        if lista2[i + j] != lista1[j]:
+      for i in range(len(lista1)):
+        if lista1[i] != lista2[i]:
           igual = False
           break
-        else:
-          iguais.append(lista1[j])
-          continue
-      if igual and len(iguais) >= minimoIgual and i > 0 and j < len(lista2):
-        return True, i, j
-        
-  elif len(lista1) == len(lista2):
-    igual = True
-    for i in range(len(lista1)):
-      if lista1[i] != lista2[i]:
-        igual = False
-        break
-    if igual:
-      return True, 0, len(lista1)
-
-  return False, None, None
+      if igual:
+        return True, 0, len(lista1)
+    else:
+      return False, None, None
+    
+    return False, None, None
+  else:
+    return False, None, None
 
 def substituirRepetidos(substituir, nfas):
   dicionario = {}
@@ -860,9 +868,11 @@ def substituirRepetidos(substituir, nfas):
       for transicao in transicoes[sub[2]:sub[3]+sub[2]+1]:
         proximos = alvo.transition.setdefault(transicao)
         for prox in proximos:
-          removerEstado.add(prox)
-        removerEstado.add(transicao[0])
-        removerTransicao.add(transicao)
+          if prox not in alvo.acceptStates and transicao[0] != alvo.startState:
+            removerEstado.add(prox)
+            removerEstado.add(transicao[0])
+            removerTransicao.add(transicao)
+        
       for i in removerTransicao:
         if i in alvo.transition:     
           alvo.transition.pop(i)
@@ -927,14 +937,22 @@ def subRepetidos(nfas, minimoIgual = 4):
     teste1 = nfas.setdefault(i)
     sequenciaAcoes1 = []
     for transicao in teste1.transition.keys():
-      sequenciaAcoes1.append(transicao[1])
+      prox = teste1.transition.setdefault(transicao)
+      if prox not in teste1.acceptStates:
+        sequenciaAcoes1.append(transicao[1])
     for j in nfas.keys():
       if i != j:
         teste2 = nfas.setdefault(j)  
         sequenciaAcoes2 = []
+        estadosLista2 = []
         for transicao in teste2.transition.keys():
-          sequenciaAcoes2.append(transicao[1])
-        sublista, inicio, fim = removeElementos(sequenciaAcoes1, sequenciaAcoes2, minimoIgual, nfas[j].startState)
+          prox = teste2.transition.setdefault(transicao)
+          if transicao[0] != teste2:
+            sequenciaAcoes2.append(transicao[1])
+            estadosLista2.append(transicao[0])
+        for s in teste2.acceptStates:
+          estadosLista2.append(s)
+        sublista, inicio, fim = removeElementos(sequenciaAcoes1, sequenciaAcoes2, estadosLista2, minimoIgual, nfas[j].startState, nfas[j].acceptStates)
         if sublista == True and (j,i) not in guardados and (i,j) not in guardados:
           if len(fimSubSeq[j]) > 0:
             limite = True
@@ -986,6 +1004,7 @@ def constroiSubAutomatosSeq(automato, blocos):
   saidas = automato.saidas
   for bloco in blocos.keys():
     sequencia = blocos.setdefault(bloco)
+    print(type(sequencia))
     states = set()
     alphabet = set()#automato.alphabet
     initial_state = sequencia[0]
@@ -1106,7 +1125,7 @@ def operacaoSequencias(automato_e, tamanhoMinimo, tamanhoMaximo):
       novoAutomato.set_epsilon_closure()      
 
       errado, erros = verificaSequencias(novoAutomato, tamanhoMinimo)
-      print("TÁ ERRADO?", errado, erros)
+      print("ESTÁ ERRADO?", errado, erros)
 
 
       return novoAutomato
@@ -1142,7 +1161,6 @@ def tabelamentoBPMN(bpmn):
   with outBPMN:
 
     display(pd.DataFrame(resultadosBPMN,columns=[" ", "Gateways","Tasks","Transições", "Componentes"]))
-
 
 
 
@@ -1649,8 +1667,8 @@ def tabelamento(event_log, df_test, sRetTest = True, camMin=True, sRet=True, joi
         #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
         bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #fit = pm4py.fitness_alignments(df_test, net, im, fm)
         resultados.append([f"Operação Sequencias min/max:3-25 estados DFA min caminhos mínimos",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['percFitTraces']])
         resultadosBPMN.append([f"Operação Sequencias min/max:3-25 estados DFA min caminhos mínimos", gateways, tasks, flows, gateways+tasks])
         
@@ -1699,8 +1717,8 @@ def tabelamento(event_log, df_test, sRetTest = True, camMin=True, sRet=True, joi
         #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
         bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #fit = pm4py.fitness_alignments(df_test, net, im, fm)
         resultados.append([f"Operação Sequencias min/max:3-25 estados DFA min sem retrabalho",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['percFitTraces']])
         resultadosBPMN.append([f"Operação Sequencias min/max:3-25 estados DFA min sem retrabalho", gateways, tasks, flows, gateways+tasks])
         
@@ -1747,8 +1765,8 @@ def tabelamento(event_log, df_test, sRetTest = True, camMin=True, sRet=True, joi
         #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
         bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #fit = pm4py.fitness_alignments(df_test, net, im, fm)
         resultados.append([f"Operação Sequencias min/max:3-25 estados DFA min join",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['percFitTraces']])
         resultadosBPMN.append([f"Operação Sequencias min/max:3-25 estados DFA min join", gateways, tasks, flows, gateways+tasks])
         
@@ -1793,8 +1811,8 @@ def tabelamento(event_log, df_test, sRetTest = True, camMin=True, sRet=True, joi
           #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
           bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
           gateways, tasks, flows = countBPMN(bpmn)
-          net, im, fm = pm4py.convert_to_petri_net(bpmn)
-          fit = pm4py.fitness_alignments(df_test, net, im, fm)
+          #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+          #fit = pm4py.fitness_alignments(df_test, net, im, fm)
           resultados.append([f"Operação Sequencias min/max:3-25 estados DFA min sem retrabalho join",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['percFitTraces']])
           resultadosBPMN.append([f"Operação Sequencias min/max:3-25 estados DFA min sem retrabalho join", gateways, tasks, flows, gateways+tasks])
           
@@ -1843,8 +1861,8 @@ def tabelamento(event_log, df_test, sRetTest = True, camMin=True, sRet=True, joi
       #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
       bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      fit = pm4py.fitness_alignments(df_test, net, im, fm)
+      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      #fit = pm4py.fitness_alignments(df_test, net, im, fm)
       resultados.append(["Operação Sequencias min/max:3-25 estados DFA min",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['percFitTraces']])
       resultadosBPMN.append(["Operação Sequencias min/max:3-25 estados DFA min", gateways, tasks, flows, gateways+tasks])
       
@@ -1890,8 +1908,8 @@ def tabelamento(event_log, df_test, sRetTest = True, camMin=True, sRet=True, joi
         #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
         bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #fit = pm4py.fitness_alignments(df_test, net, im, fm)
         resultados.append(["Operação Sequencias min/max:3-25 estados DFA min caminhos mínimos",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['percFitTraces']])
         resultadosBPMN.append(["Operação Sequencias min/max:3-25 estados DFA min caminhos mínimos", gateways, tasks, flows, gateways+tasks])
         
@@ -1940,8 +1958,8 @@ def tabelamento(event_log, df_test, sRetTest = True, camMin=True, sRet=True, joi
         #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
         bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #fit = pm4py.fitness_alignments(df_test, net, im, fm)
         resultados.append(["Operação Sequencias min/max:3-25 estados DFA min sem retrabalho",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['percFitTraces']])
         resultadosBPMN.append(["Operação Sequencias min/max:3-25 estados DFA min sem retrabalho", gateways, tasks, flows, gateways+tasks])
         
@@ -1989,8 +2007,8 @@ def tabelamento(event_log, df_test, sRetTest = True, camMin=True, sRet=True, joi
         #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
         bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #fit = pm4py.fitness_alignments(df_test, net, im, fm)
         resultados.append(["Operação Sequencias min/max:3-25 estados DFA min join",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['percFitTraces']])
         resultadosBPMN.append(["Operação Sequencias min/max:3-25 estados DFA min join", gateways, tasks, flows, gateways+tasks])
         
@@ -2037,11 +2055,12 @@ def tabelamento(event_log, df_test, sRetTest = True, camMin=True, sRet=True, joi
           #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
           bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
           gateways, tasks, flows = countBPMN(bpmn)
-          net, im, fm = pm4py.convert_to_petri_net(bpmn)
-          fit = pm4py.fitness_alignments(df_test, net, im, fm)
+          #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+          #fit = pm4py.fitness_alignments(df_test, net, im, fm)
           resultados.append(["Operação Sequencias min/max:3-25 estados DFA min sem retrabalho join",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['percFitTraces']])
           resultadosBPMN.append(["Operação Sequencias min/max:3-25 estados DFA min sem retrabalho join", gateways, tasks, flows, gateways+tasks])
 
+    
 
   outMaquinaEstado = widgets.Output()
 
@@ -2227,3 +2246,76 @@ def comparacao(bpmnAlpha, bpmnHeu, bpmnInd, fitAlpha, fitHeu, fitInd, train_csv,
     display(textSum)
 
     display(pd.DataFrame(comparacaoBPMN,columns=["Referente à:", "Gateways","Tasks","Transições","Componentes", "Acurácia"]))
+
+def tabTraces(lista):
+  tracesFreq = []
+  dictTraces = {}
+  dictFreq = {}
+  count = 0
+  for (i,n) in lista:
+    dictTraces.setdefault(count, i)
+    dictFreq.setdefault(count, n)
+    tracesFreq.append([count, n])
+    print([count, n])
+    count = count+1
+
+
+
+
+  outFreqTraces = widgets.Output()
+
+  
+  tabs = widgets.Tab(children=[outFreqTraces])
+  tabs.set_title(0, 'Frequência dos traces')
+  display(tabs)
+  with outFreqTraces:
+    display(pd.DataFrame(tracesFreq,columns=["Trace","Frequência"]))
+
+
+def caracteristicasLogs(event_log, x=30, tabela=True, repeticao=True):
+  if repeticao:
+    lista = get_trace_frequency(event_log)
+    print(len(lista))
+    freq = []
+    trace = []
+    j = 0
+    dicionario = {}
+    for i in lista:
+    #  print(i[1])
+      trace.append("Trace " + str(j))
+      freq.append(i[1])
+      dicionario.setdefault(j, ("Trace "+str(j), i[1]))
+      j = j+1
+
+    data = {"Trace" : trace, "Frequencia" : freq}
+    event_freq = pd.DataFrame(data=data)
+    if tabela:
+      event_freq.head(x)
+    else:
+      event_freq.groupby("Trace").sum().sort_values(by="Frequencia")[-x:].plot.bar()
+      plt.show()
+  else:
+    unicos = []
+    for j in range(len(event_log)):
+      trace, trace_new_transitions = removeAllSequencesOfRepetitions(event_log[j])
+      unicos.append(trace)
+
+    lista2 = get_trace_frequency(unicos)
+
+    freq2 = []
+    trace2 = []
+    j = 0
+    for i in lista2:
+    #  print(i[1])
+      trace2.append("Trace " + str(j))
+      freq2.append(i[1])
+      j = j+1
+
+    data = {"Trace" : trace2, "Frequencia" : freq2}
+    event_freq2 = pd.DataFrame(data=data)
+    if tabela:
+      event_freq2.head(x)
+    else:
+      event_freq2.groupby("Trace").sum().sort_values(by="Frequencia")[-x:].plot.bar()
+      plt.show()
+
