@@ -3023,7 +3023,7 @@ def caracteristicasLogs(event_log, x=30, tabela=True, repeticao=True):
       sRep.append(trace)
 
     unicos = []
-    for i in SRep:
+    for i in sRep:
       if i not in final:
         unicos.append(i)
 
