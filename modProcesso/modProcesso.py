@@ -429,9 +429,11 @@ def nfaBB_to_bpmn(nfa, remove_unnecessary_gateways=True):
 
 def fitnessAutomata(automato, df_test2, sRet=False, sRetTest=False):
   if sRetTest == False:
+    print("AAAAAAAAAAAA")
 
     aceita = 0
     for i in range(len(df_test2)):
+      #print(i)
       if automato.aceita(df_test2[i]):
         aceita = aceita+1
 
@@ -1250,7 +1252,7 @@ def mostraTabFreq(event_log, resultados):
 def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin=True, sRet=True, join=True, mFreq=False, p=1, remGat = True, acuraciaAutomato=True, tokenbased=True):
 
   if acuraciaAutomato:
-
+    print("aqui")
     #Caminhos mais frequêntes
     if mFreq:
       l_mf_traces, acuracia = get_most_frequent_traces(event_log,percentage=p)
@@ -1261,7 +1263,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
       resultados = []
       resultadosBPMN = []
       nfa = to_nfa(event_logFreq)
-      fit = fitnessAutomata(nfa, df_test, sRet, sRetTest)
+      fit = fitnessAutomata(nfa, df_test, sRet, False)
       bpmn = nfa_to_bpmn(nfa, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
       net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1270,7 +1272,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
       resultadosBPMN.append([f"Não-Determinística", gateways, tasks, flows, gateways+tasks])
       dfa = nfa.determinization()
       dfa.rename()
-      fit = fitnessAutomata(dfa, df_test, sRet, sRetTest)
+      fit = fitnessAutomata(dfa, df_test, sRet, False)
       bpmn = dfa_to_bpmn(dfa, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
       net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1281,7 +1283,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
       min= dfa.minimization()
       min.rename()
-      fit = fitnessAutomata(min, df_test, sRet, sRetTest)
+      fit = fitnessAutomata(min, df_test, sRet, False)
       bpmn = dfa_to_bpmn(min, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
       net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1293,7 +1295,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
       min = dfaToNfa(min)
       nfaResultado = operacaoSequencias(min, minimo, maximo)
-      fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
+      fit = fitnessAutomata(nfaResultado, df_test, sRet, False)
 
       bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
@@ -1306,7 +1308,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
       #Caminho Mínimo
       if camMin:
         nfaCamMin = to_nfa_minimum_path(event_logFreq, nfa_bb=False)
-        fit = fitnessAutomata(nfaCamMin, df_test, sRet, sRetTest)
+        fit = fitnessAutomata(nfaCamMin, df_test, sRet, False)
         bpmn = nfa_to_bpmn(nfaCamMin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1318,7 +1320,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
         dfa = nfaCamMin.determinization()
         #print(dfa.alphabet)
         dfa.rename()
-        fit = fitnessAutomata(dfa, df_test, sRet, sRetTest)
+        fit = fitnessAutomata(dfa, df_test, sRet, False)
         bpmn = dfa_to_bpmn(dfa, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1329,7 +1331,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
 
         min = dfa.minimization()
-        fit = fitnessAutomata(min, df_test, sRet, sRetTest)
+        fit = fitnessAutomata(min, df_test, sRet, False)
         bpmn = dfa_to_bpmn(min, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1341,7 +1343,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
         min = dfaToNfa(min)
         nfaResultado = operacaoSequencias(min, minimo, maximo)
-        fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
+        fit = fitnessAutomata(nfaResultado, df_test, sRet, False)
         bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1403,7 +1405,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
       #Sem caminhos repetidos
       if join:
         nfaJoin = to_nfa_minimum_path_join_traces(event_logFreq)
-        fit = fitnessAutomata(nfaJoin, df_test, sRet, sRetTest)
+        fit = fitnessAutomata(nfaJoin, df_test, sRet, False)
         bpmn = nfa_to_bpmn(nfaJoin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1415,7 +1417,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
         dfaJoin = nfaJoin.determinization()
         dfaJoin.rename()
-        fit = fitnessAutomata(dfaJoin, df_test, sRet, sRetTest)
+        fit = fitnessAutomata(dfaJoin, df_test, sRet, False)
         bpmn = dfa_to_bpmn(dfaJoin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1427,7 +1429,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
         minJoin= dfaJoin.minimization()
         minJoin.rename()
-        fit = fitnessAutomata(minJoin, df_test, sRet, sRetTest)
+        fit = fitnessAutomata(minJoin, df_test, sRet, False)
         bpmn = dfa_to_bpmn(minJoin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1439,7 +1441,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
         min = dfaToNfa(minJoin)
         nfaResultado = operacaoSequencias(min, minimo, maximo)
-        fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
+        fit = fitnessAutomata(nfaResultado, df_test, sRet, False)
         bpmn = nfaBB_to_bpmn(min, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1498,10 +1500,8 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
       resultados = []
       resultadosBPMN = []
       nfa = to_nfa(event_log)
-
-      fit = fitnessAutomata(nfa, df_test, sRet, sRetTest)
-
-
+      fit = fitnessAutomata(nfa, df_test, sRet, False)
+      
       bpmn = nfa_to_bpmn(nfa, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
       net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1511,7 +1511,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
       dfa = nfa.determinization()
       dfa.rename()
-      fit = fitnessAutomata(dfa, df_test, sRet, sRetTest)
+      fit = fitnessAutomata(dfa, df_test, sRet, False)
       bpmn = dfa_to_bpmn(dfa, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
       net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1523,7 +1523,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
       min= dfa.minimization()
       min.rename()
-      fit = fitnessAutomata(min, df_test, sRet, sRetTest)
+      fit = fitnessAutomata(min, df_test, sRet, False)
       bpmn = dfa_to_bpmn(min, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
       net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1535,7 +1535,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
       min = dfaToNfa(min)
       nfaResultado = operacaoSequencias(min, minimo, maximo)
-      fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
+      fit = fitnessAutomata(nfaResultado, df_test, sRet, False)
       bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
       net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1548,7 +1548,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
       #Caminho Mínimo
       if camMin:
         nfaCamMin = to_nfa_minimum_path(event_log, nfa_bb=False)
-        fit = fitnessAutomata(nfaCamMin, df_test, sRet, sRetTest)
+        fit = fitnessAutomata(nfaCamMin, df_test, sRet, False)
         bpmn = nfa_to_bpmn(nfaCamMin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1559,7 +1559,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
         dfa = nfaCamMin.determinization()
         dfa.rename()
-        fit = fitnessAutomata(dfa, df_test, sRet, sRetTest)
+        fit = fitnessAutomata(dfa, df_test, sRet, False)
         bpmn = dfa_to_bpmn(dfa, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1570,7 +1570,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
 
         min = dfa.minimization()
-        fit = fitnessAutomata(min, df_test, sRet, sRetTest)
+        fit = fitnessAutomata(min, df_test, sRet, False)
         bpmn = dfa_to_bpmn(min, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1582,7 +1582,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
         min = dfaToNfa(min)
         nfaResultado = operacaoSequencias(min, minimo, maximo)
-        fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
+        fit = fitnessAutomata(nfaResultado, df_test, sRet, False)
         bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1645,7 +1645,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
       #Sem caminhos repetidos
       if join:
         nfaJoin = to_nfa_minimum_path_join_traces(event_log)
-        fit = fitnessAutomata(nfaJoin, df_test, sRet, sRetTest)
+        fit = fitnessAutomata(nfaJoin, df_test, sRet, False)
         bpmn = nfa_to_bpmn(nfaJoin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1657,7 +1657,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
         dfaJoin = nfaJoin.determinization()
         dfaJoin.rename()
-        fit = fitnessAutomata(dfaJoin, df_test, sRet, sRetTest)
+        fit = fitnessAutomata(dfaJoin, df_test, sRet, False)
         bpmn = dfa_to_bpmn(dfaJoin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1669,7 +1669,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
         minJoin= dfaJoin.minimization()
         minJoin.rename()
-        fit = fitnessAutomata(minJoin, df_test, sRet, sRetTest)
+        fit = fitnessAutomata(minJoin, df_test, sRet, False)
         bpmn = dfa_to_bpmn(minJoin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -1681,7 +1681,7 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
         min = dfaToNfa(minJoin)
         nfaResultado = operacaoSequencias(min, minimo, maximo)
-        fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
+        fit = fitnessAutomata(nfaResultado, df_test, sRet, False)
         bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
@@ -2986,8 +2986,18 @@ def tabTraces(lista):
 
 def caracteristicasLogs(event_log, x=30, tabela=True, repeticao=True):
   if repeticao:
+
+
+    unicos = []
+    for i in event_log:
+      if i not in unicos:
+        unicos.append(i)
+
+    print("Número de traces únicos", len(unicos))
+    print("N° Atividades", len(event_log['Activity'].unique()))
+    print("N° Cases", len(event_log['Case ID'].unique()))
+
     lista = get_trace_frequency(event_log)
-    print(len(lista))
     freq = []
     trace = []
     j = 0
@@ -3007,12 +3017,23 @@ def caracteristicasLogs(event_log, x=30, tabela=True, repeticao=True):
       event_freq.groupby("Trace").sum().sort_values(by="Frequencia")[-x:].plot.bar()
       plt.show()
   else:
-    unicos = []
+    sRep = []
     for j in range(len(event_log)):
       trace, trace_new_transitions = removeAllSequencesOfRepetitions(event_log[j])
-      unicos.append(trace)
+      sRep.append(trace)
 
-    lista2 = get_trace_frequency(unicos)
+    unicos = []
+    for i in Srep:
+      if i not in final:
+        unicos.append(i)
+
+    
+    print("Número de traces únicos", len(unicos))
+    print("N° Atividades", len(event_log['Activity'].unique()))
+    print("N° Cases", len(event_log['Case ID'].unique()))
+
+
+    lista2 = get_trace_frequency(sRep)
 
     freq2 = []
     trace2 = []
