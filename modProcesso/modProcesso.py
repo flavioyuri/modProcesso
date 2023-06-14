@@ -2984,12 +2984,12 @@ def tabTraces(lista):
     display(pd.DataFrame(tracesFreq,columns=["Trace","Frequência"]))
 
 
-def caracteristicasLogs(event_log, x=30, tabela=True, repeticao=True):
+def caracteristicasLogs(event_log, lLog, x=30, tabela=True, repeticao=True):
   if repeticao:
 
 
     unicos = []
-    for i in event_log:
+    for i in lLog:
       if i not in unicos:
         unicos.append(i)
 
@@ -2997,7 +2997,7 @@ def caracteristicasLogs(event_log, x=30, tabela=True, repeticao=True):
     print("N° Atividades", len(event_log['Activity'].unique()))
     print("N° Cases", len(event_log['Case ID'].unique()))
 
-    lista = get_trace_frequency(event_log)
+    lista = get_trace_frequency(lLog)
     freq = []
     trace = []
     j = 0
@@ -3018,8 +3018,8 @@ def caracteristicasLogs(event_log, x=30, tabela=True, repeticao=True):
       plt.show()
   else:
     sRep = []
-    for j in range(len(event_log)):
-      trace, trace_new_transitions = removeAllSequencesOfRepetitions(event_log[j])
+    for j in range(len(lLog)):
+      trace, trace_new_transitions = removeAllSequencesOfRepetitions(lLog[j])
       sRep.append(trace)
 
     unicos = []
