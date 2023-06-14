@@ -1,6 +1,6 @@
-#!pip install git+https://github.com/daviromero/teocomp.git -q
-#!pip install git+https://github.com/daviromero/automaton2bpmn.git -q
-#!pip install wget -q
+!pip install git+https://github.com/daviromero/teocomp.git -q
+!pip install git+https://github.com/daviromero/automaton2bpmn.git -q
+!pip install wget -q
 from teocomp.dfa import DFA
 from teocomp.nfa import NFA
 from teocomp.nfa_e import NFA_E
@@ -3012,7 +3012,7 @@ def caracteristicasLogs(event_log, lLog, x=30, tabela=True, repeticao=True):
     data = {"Trace" : trace, "Frequencia" : freq}
     event_freq = pd.DataFrame(data=data)
     if tabela:
-      event_freq.head(x)
+      display(event_freq.head(x))
     else:
       event_freq.groupby("Trace").sum().sort_values(by="Frequencia")[-x:].plot.bar()
       plt.show()
@@ -3047,7 +3047,7 @@ def caracteristicasLogs(event_log, lLog, x=30, tabela=True, repeticao=True):
     data = {"Trace" : trace2, "Frequencia" : freq2}
     event_freq2 = pd.DataFrame(data=data)
     if tabela:
-      event_freq2.head(x)
+      display(event_freq2.head(x))
     else:
       event_freq2.groupby("Trace").sum().sort_values(by="Frequencia")[-x:].plot.bar()
       plt.show()
