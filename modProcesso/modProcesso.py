@@ -429,7 +429,6 @@ def nfaBB_to_bpmn(nfa, remove_unnecessary_gateways=True):
 
 def fitnessAutomata(automato, df_test2, sRet=False, sRetTest=False):
   if sRetTest == False:
-    print("AAAAAAAAAAAA")
 
     aceita = 0
     for i in range(len(df_test2)):
@@ -1252,7 +1251,6 @@ def mostraTabFreq(event_log, resultados):
 def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin=True, sRet=True, join=True, mFreq=False, p=1, remGat = True, acuraciaAutomato=True, tokenbased=True):
 
   if acuraciaAutomato:
-    print("aqui")
     #Caminhos mais frequêntes
     if mFreq:
       l_mf_traces, acuracia = get_most_frequent_traces(event_log,percentage=p)
