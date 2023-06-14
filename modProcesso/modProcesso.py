@@ -2983,7 +2983,7 @@ def tabTraces(lista):
     display(pd.DataFrame(tracesFreq,columns=["Trace","Frequência"]))
 
 
-def caracteristicasLogs(event_log, lLog, x=30, tabela=True, repeticao=True):
+def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, repeticao=True):
   if repeticao:
 
 
@@ -2993,8 +2993,8 @@ def caracteristicasLogs(event_log, lLog, x=30, tabela=True, repeticao=True):
         unicos.append(i)
 
     print("Número de traces únicos", len(unicos))
-    print("N° Atividades", len(event_log['Activity'].unique()))
-    print("N° Cases", len(event_log['Case ID'].unique()))
+    print("N° Atividades", len(event_log[activity].unique()))
+    print("N° Cases", len(event_log[caseId].unique()))
 
     lista = get_trace_frequency(lLog)
     freq = []
@@ -3026,10 +3026,10 @@ def caracteristicasLogs(event_log, lLog, x=30, tabela=True, repeticao=True):
       if i not in unicos:
         unicos.append(i)
 
-    
+
     print("Número de traces únicos", len(unicos))
-    print("N° Atividades", len(event_log['Activity'].unique()))
-    print("N° Cases", len(event_log['Case ID'].unique()))
+    print("N° Atividades", len(event_log[activity].unique()))
+    print("N° Cases", len(event_log[caseId].unique()))
 
 
     lista2 = get_trace_frequency(sRep)
@@ -3050,4 +3050,3 @@ def caracteristicasLogs(event_log, lLog, x=30, tabela=True, repeticao=True):
     else:
       event_freq2.groupby("Trace").sum().sort_values(by="Frequencia")[-x:].plot.bar()
       plt.show()
-
