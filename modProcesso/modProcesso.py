@@ -2220,6 +2220,7 @@ def tabTraces(lista):
     display(pd.DataFrame(tracesFreq,columns=["Trace","Frequência"]))
 
 
+
 def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, repeticao=True):
   if repeticao:
 
@@ -2232,7 +2233,8 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
         if j not in atividades.keys():
           atividades.setdefault(j, 1)
         else:
-          atividades.update({j, atividades[j]+1})
+          freq = atividades.setdefault(j)
+          atividades.update({j, freq+1})
       if i not in unicos:
         unicos.append(i)
       tamanhoTraces.append(len(i))
@@ -2264,10 +2266,10 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
     textSum = "N° eventos: " + str(sum)
     print(textSum)
 
-    
 
-    
-    
+
+
+
 
     lista = get_trace_frequency(unicos)
     freq = []
@@ -2308,7 +2310,8 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
         if j not in atividades.keys():
           atividades.setdefault(j, 1)
         else:
-          atividades.update({j, atividades[j]+1})
+          freq = atividades.setdefault(j)
+          atividades.update({j, freq+1})
       tamanhoTraces.append(len(i))
 
     print("N° Atividades", len(event_log[activity].unique()))
@@ -2340,7 +2343,7 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
 
 
 
-    
+
     lista2 = get_trace_frequency(sRep)
 
     freq2 = []
@@ -2350,7 +2353,7 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
     for i in lista2:
     #  print(i[1])
       trace2.append("Trace " + str(j))
-      freq2.append(i[1]) 
+      freq2.append(i[1])
       porcento = i[1]/len(lista2)
       porcentagem.append(porcento*100)
       j = j+1
