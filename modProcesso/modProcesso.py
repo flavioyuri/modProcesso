@@ -32,6 +32,7 @@ import pm4py
 import networkx as nx
 import pandas as pd
 import pylab
+import numpy as np
 from pm4py.objects.log.util import dataframe_utils
 from pm4py.objects.conversion.log import converter as log_converter
 from pm4py.visualization.bpmn import visualizer as bpmn_visualizer
@@ -2224,27 +2225,66 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
 
 
     unicos = []
+    atividades = {}
+    tamanhoTraces = []
     for i in lLog:
+      for j in i:
+        if j not in atividades.keys():
+          atividades.setdefault(j, 1)
+        else:
+          atividades.update({j, atividades[j]+1})
       if i not in unicos:
         unicos.append(i)
+      tamanhoTraces.append(len(i))
+
+    print("N° Atividades", len(event_log[activity].unique()))
+    activities = []
+    freqAct =[]
+    for i in atividades.keys():
+      activites.append(i)
+      freqAct.append(atividades.setdefault(i))
+
+    dados = {"Atividades":activities, "Frequência":freqAct}
+    df_activities = pd.DataFrame(data=dados)
+    display(df_activities)
+    text = "Número de traces: " + str(len(lLog))
+    print(text)
+    total = 0
+    for x in tamanhoTraces:
+      total+=x
+    media = total/len(tamanhoTraces)
+    print("Media de tamanho dos traces:", media)
+    print("Desvio padrão do tamanho dos traces", np.std(tamanhoTraces))
 
     print("Número de traces únicos", len(unicos))
-    print("N° Atividades", len(event_log[activity].unique()))
     print("N° Cases", len(event_log[caseId].unique()))
+    sum = 0
+    for x in lLog:
+      sum+=len(x)
+    textSum = "N° eventos: " + str(sum)
+    print(textSum)
 
-    lista = get_trace_frequency(lLog)
+    
+
+    
+    
+
+    lista = get_trace_frequency(unicos)
     freq = []
     trace = []
+    porcentagem = []
     j = 0
     dicionario = {}
     for i in lista:
     #  print(i[1])
       trace.append("Trace " + str(j))
       freq.append(i[1])
+      porcento = i[1]/len(lista)
+      porcentagem.append(porcento*100)
       dicionario.setdefault(j, ("Trace "+str(j), i[1]))
       j = j+1
 
-    data = {"Trace" : trace, "Frequencia" : freq}
+    data = {"Trace" : trace, "Frequencia" : freq, "%":porcentagem}
     event_freq = pd.DataFrame(data=data)
     if tabela:
       display(event_freq.head(x))
@@ -2258,28 +2298,64 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
       sRep.append(trace)
 
     unicos = []
+    atividades = {}
+    tamanhoTraces = []
     for i in sRep:
       if i not in unicos:
         unicos.append(i)
 
+      for j in i:
+        if j not in atividades.keys():
+          atividades.setdefault(j, 1)
+        else:
+          atividades.update({j, atividades[j]+1})
+      tamanhoTraces.append(len(i))
+
+    print("N° Atividades", len(event_log[activity].unique()))
+    activities = []
+    freqAct =[]
+    for i in atividades.keys():
+      activites.append(i)
+      freqAct.append(atividades.setdefault(i))
+
+    dados = {"Atividades":activities, "Frequência":freqAct}
+    df_activities = pd.DataFrame(data=dados)
+    display(df_activities)
+    text = "Número de traces: " + str(len(sRep))
+    print(text)
+    total = 0
+    for x in tamanhoTraces:
+      total+=x
+    media = total/len(tamanhoTraces)
+    print("Media de tamanho dos traces:", media)
+    print("Desvio padrão do tamanho dos traces", np.std(tamanhoTraces))
 
     print("Número de traces únicos", len(unicos))
-    print("N° Atividades", len(event_log[activity].unique()))
     print("N° Cases", len(event_log[caseId].unique()))
+    sum = 0
+    for x in sRep:
+      sum+=len(x)
+    textSum = "N° eventos: " + str(sum)
+    print(textSum)
 
 
+
+    
     lista2 = get_trace_frequency(sRep)
 
     freq2 = []
     trace2 = []
+    porcentagem = []
     j = 0
     for i in lista2:
     #  print(i[1])
       trace2.append("Trace " + str(j))
-      freq2.append(i[1])
+      freq2.append(i[1]) 
+      porcento = i[1]/len(lista2)
+      porcentagem.append(porcento*100)
       j = j+1
 
-    data = {"Trace" : trace2, "Frequencia" : freq2}
+    data = {"Trace" : trace2, "Frequencia" : freq2, '%':porcentagem}
     event_freq2 = pd.DataFrame(data=data)
     if tabela:
       display(event_freq2.head(x))
