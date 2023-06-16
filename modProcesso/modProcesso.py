@@ -2271,7 +2271,7 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
 
 
 
-    lista = get_trace_frequency(unicos)
+    lista = get_trace_frequency(lLog)
     freq = []
     trace = []
     porcentagem = []
@@ -2281,7 +2281,7 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
     #  print(i[1])
       trace.append("Trace " + str(j))
       freq.append(i[1])
-      porcento = i[1]/len(lista)
+      porcento = i[1]/len(lLog)
       porcentagem.append(porcento*100)
       dicionario.setdefault(j, ("Trace "+str(j), i[1]))
       j = j+1
@@ -2354,7 +2354,7 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
     #  print(i[1])
       trace2.append("Trace " + str(j))
       freq2.append(i[1])
-      porcento = i[1]/len(lista2)
+      porcento = i[1]/len(lLog)
       porcentagem.append(porcento*100)
       j = j+1
 
@@ -2365,3 +2365,4 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
     else:
       event_freq2.groupby("Trace").sum().sort_values(by="Frequencia")[-x:].plot.bar()
       plt.show()
+
