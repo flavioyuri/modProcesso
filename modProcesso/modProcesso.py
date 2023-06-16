@@ -2234,7 +2234,7 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
           atividades.setdefault(j, 1)
         else:
           freq = atividades.setdefault(j)
-          atividades.update({j, freq+1})
+          atividades.update({j: freq+1})
       if i not in unicos:
         unicos.append(i)
       tamanhoTraces.append(len(i))
@@ -2243,7 +2243,7 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
     activities = []
     freqAct =[]
     for i in atividades.keys():
-      activites.append(i)
+      activities.append(i)
       freqAct.append(atividades.setdefault(i))
 
     dados = {"Atividades":activities, "Frequência":freqAct}
@@ -2289,7 +2289,7 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
     data = {"Trace" : trace, "Frequencia" : freq, "%":porcentagem}
     event_freq = pd.DataFrame(data=data)
     if tabela:
-      display(event_freq.head(x))
+      display(event_freq)
     else:
       event_freq.groupby("Trace").sum().sort_values(by="Frequencia")[-x:].plot.bar()
       plt.show()
@@ -2311,14 +2311,14 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
           atividades.setdefault(j, 1)
         else:
           freq = atividades.setdefault(j)
-          atividades.update({j, freq+1})
+          atividades.update({j:freq+1})
       tamanhoTraces.append(len(i))
 
     print("N° Atividades", len(event_log[activity].unique()))
     activities = []
     freqAct =[]
     for i in atividades.keys():
-      activites.append(i)
+      activities.append(i)
       freqAct.append(atividades.setdefault(i))
 
     dados = {"Atividades":activities, "Frequência":freqAct}
@@ -2361,7 +2361,7 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
     data = {"Trace" : trace2, "Frequencia" : freq2, '%':porcentagem}
     event_freq2 = pd.DataFrame(data=data)
     if tabela:
-      display(event_freq2.head(x))
+      display(event_freq2)
     else:
       event_freq2.groupby("Trace").sum().sort_values(by="Frequencia")[-x:].plot.bar()
       plt.show()
