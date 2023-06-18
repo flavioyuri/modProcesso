@@ -25,7 +25,7 @@ import wget
 import os.path
 import io
 import pandas as pd
-import unittesto
+import unittest
 from IPython.display import display, Markdown
 #pip install pm4py
 import pm4py
