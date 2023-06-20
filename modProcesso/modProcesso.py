@@ -1163,22 +1163,22 @@ def tabelamentoPorFrequencia(event_log, df, p, list_test, df_test, minimo=3, max
       net = removeTransicoesInvisiveis(net)
       tkb = pm4py.fitness_token_based_replay(df_test, net, im, fm)
       #print("fm", fm)
-      replayed_traces = tk.apply(df_test, net, im, fm)
-      aceita = 0
-      for i in replayed_traces:
-        for f in fm:
-          if f in i['reached_marking']:
-            aceita = aceita+1
-            break
+      #replayed_traces = tk.apply(df_test, net, im, fm)
+      #aceita = 0
+      #for i in replayed_traces:
+      #  for f in fm:
+      #    if f in i['reached_marking']:
+      #      aceita = aceita+1
+      #      break
 
-      Cases = len(df_test["Case ID"].unique())
-      fitAut = (aceita/Cases) * 100
+      #Cases = len(df_test["Case ID"].unique())
+      #fitAut = (aceita/Cases) * 100
       simp = simplicity_evaluator.apply(net)
       min = dfaToNfa(minJoinFalse)
       nfaResultado = operacaoSequencias(min, minimo, maximo)
       fit = fitnessAutomata(nfaResultado, list_test, True, True)
       print([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['perc_fit_traces'], alignments['percFitTraces'], simp])
-      resultados.append([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['perc_fit_traces'], fitAut, alignments['percFitTraces'], simp])
+      resultados.append([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['perc_fit_traces'], alignments['percFitTraces'], simp])
       p = p+0.05
     return resultados
 
@@ -1205,7 +1205,7 @@ def mostraTabFreq(event_log, resultados):
     display(text)
 
     display(textSum)
-    result = pd.DataFrame(resultados,columns=["Frequência","Atividades","Estados","Transições","Estados de Aceitação", "Sub-Automatos", "Estados + Estados sub", "AcuráciaAut", "AcuráciaTkb", "AcuraciaTkbAutomato", "AcuráciaAlignments", "Simplicidade"])
+    result = pd.DataFrame(resultados,columns=["Frequência","Atividades","Estados","Transições","Estados de Aceitação", "Sub-Automatos", "Estados + Estados sub", "AcuráciaAut", "AcuráciaTkb", "AcuráciaAlignments", "Simplicidade"])
     display(result)
 
 
@@ -1469,8 +1469,8 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
       #fit = fitnessAutomata(nfa, df_test, sRet, sRetTest)
       bpmn = nfa_to_bpmn(nfa, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net = removeTransicoesInvisiveis(net)
       net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      net = removeTransicoesInvisiveis(net)
       fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Não-Determinística",len(nfa.alphabet),len(nfa.states),nfa.len_transition(),len(nfa.acceptStates), 0, nfa.len_states(), fit['percFitTraces'], simp])
