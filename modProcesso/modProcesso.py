@@ -90,253 +90,72 @@ def removeTransicoesInvisiveis(net):
   entradas = {}
   saidas = {}
 
+
+
   for a in net.arcs:
     entradas.setdefault(a.target, []).append(a.source)
     saidas.setdefault(a.source, []).append(a.target)
 
 
 
-  adicionar = []
+  adicionarProx = []
+  adicionarAnt = []
   remover = []
   removerVazio = []
 
-  for a in net.arcs:
-    if type(a.target) == pm4py.objects.petri_net.obj.PetriNet.Transition:
-      if a.target.label == None:
-        removerVazio.append(a.target)
-        proximos = saidas.setdefault(a.target)
-        for prox in proximos:
-          if prox.name == 'sink':
-            if type(a.source) == pm4py.objects.petri_net.obj.PetriNet.Transition:
-              adicionar.append((a.source, prox))
-              remover.append((a.source, a.target))
-            elif type(a.source) == pm4py.objects.petri_net.obj.PetriNet.Place:
-              anteriores = entradas.setdefault(a.source)
-              for ant in anteriores:
-                if type(ant) == pm4py.objects.petri_net.obj.PetriNet.Transition:
-                  adicionar.append((ant, prox))
-                  remover.append((a.target, prox))
-                  remover.append((ant, a.source))
-                  remover.append((a.source, a.target))
-          else:
-            if type(prox) == pm4py.objects.petri_net.obj.PetriNet.Place:
-              aux = saidas.setdefault(prox)
-              for next in aux:
-                #print("add1", a.source, next)
-                adicionar.append((a.source, next))
-                remover.append((a.target, prox))
-                remover.append((prox, next))
-              remover.append((a.source, a.target))
-            else:
-              #print("add2", a.source, prox)
-              adicionar.append((a.source, prox))
-              remover.append((a.source, a.target))
-    if type(a.source) == pm4py.objects.petri_net.obj.PetriNet.Transition:
-      if a.source.label == None:
-        removerVazio.append(a.source)
-        anteriores = entradas.setdefault(a.source)
-        #print("source", a.source)
-        #print("anteriores", anteriores)
-        for ant in anteriores:
-          if ant.name == 'source':
-            if type(a.target) == pm4py.objects.petri_net.obj.PetriNet.Transition:
-              adicionar.append((ant, a.target))
-              remover.append((a.source, a.target))
-            elif type(a.target) == pm4py.objects.petri_net.obj.PetriNet.Place:
-              proximos = saidas.setdefault(a.target)
-              for prox in proximos:
-                if type(prox) == pm4py.objects.petri_net.obj.PetriNet.Transition:
-                  adicionar.append((ant, prox))
-                  remover.append((a.target, prox))
-                  remover.append((a.source, a.target))
-                  remover.append((ant, a.source))
-          else:
-            if type(ant) == pm4py.objects.petri_net.obj.PetriNet.Place:
-              aux = entradas.setdefault(ant)
-              for bef in aux:
-                #print("add3", bef, a.target)
-                adicionar.append((bef, a.target))
-                remover.append((ant, a.source))
-                remover.append((bef, ant))
-              remover.append((a.source, a.target))
-            else:
-              #print("add4", ant, a.target)
-              adicionar.append((ant, a.target))
-              remover.append((a.source, a.target))
+  
+  for transicao in net.transitions:
+    if transicao.label == None:
+      #print("transicao", transicao)
+      removerVazio.append(transicao)
+      sai = saidas.setdefault(transicao)
+      vem = entradas.setdefault(transicao)
+      for s in sai:
+        for v in vem:
+          #print("vs", v, s)
+          if type(s) == pm4py.objects.petri_net.obj.PetriNet.Transition and type(v) == pm4py.objects.petri_net.obj.PetriNet.Place:
+            petri_utils.add_arc_from_to(v, s, net)
+          elif s.name != "sink" and v.name != "source" and type(s) == pm4py.objects.petri_net.obj.PetriNet.Place and type(v) == pm4py.objects.petri_net.obj.PetriNet.Place:
+            aux = saidas.setdefault(s)
+            aux2 = entradas.setdefault(s)
+            remover.append(s)
+            for a in aux:
+              #print("va", v, a)
+              petri_utils.add_arc_from_to(v, a, net)
+            for a in aux2:
+              if type(a) == pm4py.objects.petri_net.obj.PetriNet.Transition and a.label != None:
+                #print("va2", a, v)
+                petri_utils.add_arc_from_to(a, v, net)
+          elif s.name == "sink" and v.name != "source" and type(v) == pm4py.objects.petri_net.obj.PetriNet.Transition:
+            petri_utils.add_arc_from_to(v, s, net)
+          elif s.name == "sink" and v.name != "source" and type(v) == pm4py.objects.petri_net.obj.PetriNet.Place:
+            aux2 = entradas.setdefault(v)
+            if len(saidas.setdefault(v)) == 1:
+              remover.append(v)
+            for a in aux2:
+              if type(a) == pm4py.objects.petri_net.obj.PetriNet.Transition and a.label != None:
+                #print("as", a, s)
+                petri_utils.add_arc_from_to(a, s, net)
+          elif s.name != "sink" and v.name == "source" and type(s) == pm4py.objects.petri_net.obj.PetriNet.Place:
+            aux2 = saidas.setdefault(s)
+            for a in aux2:
+              if type(a) == pm4py.objects.petri_net.obj.PetriNet.Transition and a.label != None:
+                #print("sa", s, a)
+                petri_utils.add_arc_from_to(v, a, net)
+                remover.append(s)
+          elif s.name == "sink" and v.name != "source" and type(v) == pm4py.objects.petri_net.obj.PetriNet.Transitions:
+            petri_utils.add_arc_from_to(v, s, net)
 
 
+  for s in remover:
+    petri_utils.remove_place(net, s)
 
+  for vazio in removerVazio:
+    petri_utils.remove_transition(net, vazio)
+                
 
-
-  arcosRemover = []
-
-  for i in remover:
-    #print("remover", i)
-    for arco in net.arcs:
-      if type(i[0]) == pm4py.objects.petri_net.obj.PetriNet.Transition and type(i[1]) == pm4py.objects.petri_net.obj.PetriNet.Transition and type(arco.source) == pm4py.objects.petri_net.obj.PetriNet.Transition and type(arco.target) == pm4py.objects.petri_net.obj.PetriNet.Transition:
-        if arco.source == i[0].label and arco.target == i[1]:
-          arcosRemover.append(arco)
-          break
-      elif type(i[0]) == pm4py.objects.petri_net.obj.PetriNet.Transition and type(i[1]) == pm4py.objects.petri_net.obj.PetriNet.Place and type(arco.source) == pm4py.objects.petri_net.obj.PetriNet.Transition and type(arco.target) == pm4py.objects.petri_net.obj.PetriNet.Place:
-        if arco.source == i[0] and arco.target == i[1]:
-          arcosRemover.append(arco)
-          break
-      elif type(i[0]) == pm4py.objects.petri_net.obj.PetriNet.Place and type(i[1]) == pm4py.objects.petri_net.obj.PetriNet.Transition and type(arco.source) == pm4py.objects.petri_net.obj.PetriNet.Place and type(arco.target) == pm4py.objects.petri_net.obj.PetriNet.Transition:
-        if arco.source == i[0] and arco.target == i[1]:
-          arcosRemover.append(arco)
-          break
-      elif type(i[0]) == pm4py.objects.petri_net.obj.PetriNet.Place and type(i[1]) == pm4py.objects.petri_net.obj.PetriNet.Place and type(arco.source) == pm4py.objects.petri_net.obj.PetriNet.Place and type(arco.target) == pm4py.objects.petri_net.obj.PetriNet.Place:
-        if arco.source == i[0] and arco.target == i[1]:
-          arcosRemover.append(arco)
-          break
-
-
-
-  for k in arcosRemover:
-    if k in net.arcs:
-      petri_utils.remove_arc(net, k)
-
-
-  for i in adicionar:
-    #print("adicionar", i)
-    if i[1] not in saidas.setdefault(i[0]) and i[0] not in entradas.setdefault(i[1]):
-      petri_utils.add_arc_from_to(i[0], i[1], net)
-      entradas.setdefault(i[1], []).append(i[0])
-      saidas.setdefault(i[0], []).append(i[1])
-
-
-
-
-
-
-  net = petri_utils.remove_unconnected_components(net)
 
   return net
-
-
-
-
-def buildSubProcess(nfa, subprocessNFA, bpmn, father_process, remove_unnecessary_gateways, i):
-  subprocessNFA.set_epsilon_closure()
-  start_event = BPMN.StartEvent(name="i_"+str(i), isInterrupting=True)
-  bpmn.add_node(start_event)
-  gateways = {}
-  subprocess = {}
-  subPro = {}
-  end_events = {}
-  gateways_in = {}
-  gateways_out = {}
-  flows = {}
-  #Each state will be an exclusive gateway except those who are representing subprocesses
-  for s in subprocessNFA.states:
-    if s in subprocessNFA.NFAs.keys() and s not in subprocess.keys():
-      subprocess[s] = BPMN.SubProcess(id=s, name=s)
-      subprocess[s].set_process(father_process)
-    elif s not in subprocessNFA.NFAs.keys():
-      gateways[s] = BPMN.ExclusiveGateway(id=s, name=s)
-      gateways[s].set_process(father_process)
-    if remove_unnecessary_gateways:
-      gateways_in[s] = []
-      gateways_out[s] = []
-
-  #Adds the epsilon closure flows
-  for s in subprocessNFA.states:
-    for s_aux in subprocessNFA.epsilon_closure[s]:
-      if s!=s_aux and s in gateways and s_aux in gateways:
-        flow = BPMN.SequenceFlow(gateways[s], gateways[s_aux])
-        bpmn.add_flow(flow)
-        if remove_unnecessary_gateways:
-          gateways_in[gateways[s_aux]].append(gateways[s])
-          gateways_out[gateways[s]].append(gateways[s_aux])
-          flows[gateways[s], gateways[s_aux]] = flow
-      elif s!=s_aux and s in subprocess and s_aux in gateways:
-        flow = BPMN.SequenceFlow(subprocess[s], gateways[s_aux])
-        bpmn.add_flow(flow)
-        if remove_unnecessary_gateways:
-          gateways_in[gateways[s_aux]].append(subprocess[s])
-          gateways_out[subprocess[s]].append(gateways[s_aux])
-          flows[subprocess[s], gateways[s_aux]] = flow
-      elif s!=s_aux and s in gateways and s_aux in subprocess:
-        flow = BPMN.SequenceFlow(gateways[s], subprocess[s_aux])
-        bpmn.add_flow(flow)
-        if remove_unnecessary_gateways:
-          gateways_in[subprocess[s_aux]].append(gateways[s])
-          gateways_out[gateways[s]].append(subprocess[s_aux])
-          flows[gateways[s], subprocess[s_aux]] = flow
-      elif s!=s_aux and s in subprocess and s_aux in subprocess:
-        flow = BPMN.SequenceFlow(subprocess[s], subprocess[s_aux])
-        bpmn.add_flow(flow)
-
-  #Adds a flow from start event to gateway which represents the initial state.
-  flow = BPMN.SequenceFlow(start_event, gateways[subprocessNFA.startState])
-  flow.set_process(father_process)
-  bpmn.add_flow(flow)
-
-  if remove_unnecessary_gateways:
-    gateways_in[subprocessNFA.startState].append(start_event)
-    flows[start_event, gateways[subprocessNFA.startState]] = flow
-
-  #For each accepting state, adds an end event
-  for s in subprocessNFA.acceptStates:
-    end_events[s] = BPMN.EndEvent(name='e_'+s)
-    flow = BPMN.SequenceFlow(gateways[s],end_events[s])
-    bpmn.add_flow(flow)
-    if remove_unnecessary_gateways:
-      gateways_out[s].append(end_events[s])
-      flows[gateways[s],end_events[s]] = flow
-
-
-  for s,a in subprocessNFA.transition:
-    if (a!=''):
-      task = BPMN.Task(name=a)
-      if s in gateways:
-        flow = BPMN.SequenceFlow(gateways[s], task)
-        bpmn.add_flow(flow)
-        if remove_unnecessary_gateways:
-          gateways_out[s].append(task)
-          flows[gateways[s], task] = flow
-      elif s in subprocess:
-        flow = BPMN.SequenceFlow(subprocess[s], task)
-        bpmn.add_flow(flow)
-        if remove_unnecessary_gateways:
-          gateways_out[s].append(task)
-          flows[subprocess[s], task] = flow
-      for n_s in subprocessNFA.transition[s,a]:
-        if n_s in gateways:
-          flow = BPMN.SequenceFlow(task, gateways[n_s])
-        if n_s in subprocess:
-          flow = BPMN.SequenceFlow(task, subprocess[n_s])
-        bpmn.add_flow(flow)
-        if remove_unnecessary_gateways:
-          if n_s in gateways:
-            gateways_in[gateways[n_s]].append(task)
-            flows[task, gateways[n_s]] = flow
-          elif n_s in subprocess:
-            gateways_in[subprocess[n_s]].append(task)
-            flows[task, subprocess[n_s]] = flow
-
-  if remove_unnecessary_gateways:
-    for s in subprocessNFA.states:
-      if(s in gateways and len(gateways_in[s])==1 and len(gateways_out[s])==1):
-        s_in = gateways_in[s][0]
-        s_out = gateways_out[s][0]
-        bpmn.remove_flow(flows[s_in, gateways[s]])
-        bpmn.remove_flow(flows[gateways[s], s_out])
-        bpmn.add_flow(BPMN.SequenceFlow(s_in, s_out))
-        bpmn.remove_node(gateways[s])
-
-      if(s in gateways and len(gateways_in[s])==1 and len(gateways_out[s])==0):
-        s_in = gateways_in[s][0]
-        bpmn.remove_flow(flows[s_in, gateways[s]])
-        bpmn.remove_node(gateways[s])
-
-  if len(subprocess) > 0:
-    for s in subprocess.keys():
-      sub = subprocessNFA.NFAs.setdefault(s)
-      bpmn = buildSubProcess(nfa, sub, bpmn, s, remove_unnecessary_gateways, i)
-      i = i+1
-
-  return bpmn
 
 
 def nfaBB_to_bpmn(nfa, remove_unnecessary_gateways=True):
@@ -1295,7 +1114,8 @@ def tabelamentoBPMN(bpmn):
     display(pd.DataFrame(resultadosBPMN,columns=[" ", "Gateways","Tasks","Transições", "Componentes"]))
 
 
-def tabelamentoPorFrequencia(event_log, p, list_test, df_test, minimo=3, maximo=25):
+def tabelamentoPorFrequencia(event_log, df, p, list_test, df_test, minimo=3, maximo=25):
+  from pm4py.algo.conformance.tokenreplay import algorithm as tk
 
   if p > 0:
     #p = 0.2
@@ -1340,14 +1160,25 @@ def tabelamentoPorFrequencia(event_log, p, list_test, df_test, minimo=3, maximo=
       bpmn = dfa_to_bpmn(minJoinFalse, True)
       net, im, fm = pm4py.convert_to_petri_net(bpmn)
       alignments = pm4py.fitness_alignments(df_test, net, im, fm)
-      net = removeTransicoesInvisiveis(net)
+      net = removeTransicoesInvisiveis2(net)
       tkb = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+      #print("fm", fm)
+      replayed_traces = tk.apply(df_test, net, im, fm)
+      aceita = 0
+      for i in replayed_traces:
+        for f in fm:
+          if f in i['reached_marking']:
+            aceita = aceita+1
+            break
+
+      Cases = len(df_test["Case ID"].unique())
+      fitAut = (aceita/Cases) * 100
       simp = simplicity_evaluator.apply(net)
       min = dfaToNfa(minJoinFalse)
       nfaResultado = operacaoSequencias(min, minimo, maximo)
       fit = fitnessAutomata(nfaResultado, list_test, True, True)
       print([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['perc_fit_traces'], alignments['percFitTraces'], simp])
-      resultados.append([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['perc_fit_traces'], alignments['percFitTraces'], simp])
+      resultados.append([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['perc_fit_traces'], fitAut, alignments['percFitTraces'], simp])
       p = p+0.05
     return resultados
 
@@ -1374,7 +1205,7 @@ def mostraTabFreq(event_log, resultados):
     display(text)
 
     display(textSum)
-    result = pd.DataFrame(resultados,columns=["Frequência","Atividades","Estados","Transições","Estados de Aceitação", "Sub-Automatos", "Estados + Estados sub", "AcuráciaAut", "AcuráciaTkb", "AcuráciaAlignments", "Simplicidade"])
+    result = pd.DataFrame(resultados,columns=["Frequência","Atividades","Estados","Transições","Estados de Aceitação", "Sub-Automatos", "Estados + Estados sub", "AcuráciaAut", "AcuráciaTkb", "AcuraciaTkbAutomato", "AcuráciaAlignments", "Simplicidade"])
     display(result)
 
 
