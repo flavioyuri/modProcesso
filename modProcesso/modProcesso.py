@@ -1208,7 +1208,8 @@ def mostraTabFreq(event_log, resultados):
     display(text)
 
     display(textSum)
-result = pd.DataFrame(resultados,columns=["Frequência","Atividades","Estados","Transições","Estados de Aceitação", "Sub-Automatos", "Estados + Estados sub", "AcuráciaAut", "AcuráciaTkb", "AcuráciaAlignments", "Simplicidade", "Precisão", "Generalização"])
+
+    result = pd.DataFrame(resultados,columns=["Frequência","Atividades","Estados","Transições","Estados de Aceitação", "Sub-Automatos", "Estados + Estados sub", "AcuráciaAut", "AcuráciaTkb", "AcuráciaAlignments", "Simplicidade", "Precisão", "Generalização"])
     
     display(result)
 
