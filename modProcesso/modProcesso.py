@@ -2337,7 +2337,27 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
 
     data = {"Trace" : trace, "Frequencia" : freq, "%":porcentagem}
     event_freq = pd.DataFrame(data=data)
+    
+    
+    listaUni = get_trace_frequency(unicos)
+    freqUni = []
+    traceUni = []
+    porcentagemUni = []
+    j = 0
+    dicionario = {}
+    for i in listaUni:
+    #  print(i[1])
+      traceUni.append("Trace " + str(j))
+      freqUni.append(i[1])
+      porcento = i[1]/len(lLog)
+      porcentagemUni.append(porcento*100)
+      dicionario.setdefault(j, ("Trace "+str(j), i[1]))
+      j = j+1
+
+    data = {"Trace" : traceUni, "Frequencia" : freqUni, "%":porcentagemUni}
+    event_freqUni = pd.DataFrame(data=data)
     if tabela:
+      display(event_freq)
       display(event_freq)
     else:
       event_freq.groupby("Trace").sum().sort_values(by="Frequencia")[-x:].plot.bar()
