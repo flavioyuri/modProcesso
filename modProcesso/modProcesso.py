@@ -2358,7 +2358,7 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
     event_freqUni = pd.DataFrame(data=data)
     if tabela:
       display(event_freq)
-      display(event_freq)
+      display(event_freqUni)
     else:
       event_freq.groupby("Trace").sum().sort_values(by="Frequencia")[-x:].plot.bar()
       plt.show()
