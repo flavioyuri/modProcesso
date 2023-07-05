@@ -1181,8 +1181,8 @@ def tabelamentoPorFrequencia(event_log, df, p, list_test, df_test, case_id, acti
       min = dfaToNfa(minJoinFalse)
       nfaResultado = operacaoSequencias(min, minimo, maximo)
       fit = fitnessAutomata(nfaResultado, list_test, True, True)
-      print([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['log_fitness'], alignments['logFitness'], simp, prec])#, gen
-      resultados.append([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['log_fitness'], alignments['logFitness'], simp, prec])#, gen
+      print([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['log_fitness'], alignments['log_fitness'], simp, prec])#, gen
+      resultados.append([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['log_fitness'], alignments['log_fitness'], simp, prec])#, gen
       p = p+0.05
     return resultados
 
