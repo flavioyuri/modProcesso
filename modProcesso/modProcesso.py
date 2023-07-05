@@ -1165,7 +1165,7 @@ def tabelamentoPorFrequencia(event_log, df, p, list_test, df_test, case_id, acti
           net = removeTransicoesInvisiveis(net)
       tkb = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
       prec = pm4py.precision_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
-      gen = generalization_evaluator.apply(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
+      gen = generalization_evaluator.apply(df_test, net, im, fm)
       #print("fm", fm)
       #replayed_traces = tk.apply(df_test, net, im, fm)
       #aceita = 0
