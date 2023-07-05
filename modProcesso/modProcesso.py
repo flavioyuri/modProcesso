@@ -1165,7 +1165,7 @@ def tabelamentoPorFrequencia(event_log, df, p, list_test, df_test, case_id, acti
           net = removeTransicoesInvisiveis(net)
       tkb = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
       prec = pm4py.precision_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
-      gen = generalization_evaluator.apply(df_test, net, im, fm)
+      #gen = generalization_evaluator.apply(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
       #print("fm", fm)
       #replayed_traces = tk.apply(df_test, net, im, fm)
       #aceita = 0
@@ -1181,8 +1181,8 @@ def tabelamentoPorFrequencia(event_log, df, p, list_test, df_test, case_id, acti
       min = dfaToNfa(minJoinFalse)
       nfaResultado = operacaoSequencias(min, minimo, maximo)
       fit = fitnessAutomata(nfaResultado, list_test, True, True)
-      print([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['perc_fit_traces'], alignments['percFitTraces'], simp, prec, gen])
-      resultados.append([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['log_fitness'], alignments['percFitTraces'], simp, prec, gen])
+      print([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['log_fitness'], alignments['logFitness'], simp, prec])#, gen
+      resultados.append([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['log_fitness'], alignments['logFitness'], simp, prec])#, gen
       p = p+0.05
     return resultados
 
@@ -1210,7 +1210,7 @@ def mostraTabFreq(event_log, resultados):
 
     display(textSum)
 
-    result = pd.DataFrame(resultados,columns=["Frequência","Atividades","Estados","Transições","Estados de Aceitação", "Sub-Automatos", "Estados + Estados sub", "AcuráciaAut", "AcuráciaTkb", "AcuráciaAlignments", "Simplicidade", "Precisão", "Generalização"])
+    result = pd.DataFrame(resultados,columns=["Frequência","Atividades","Estados","Transições","Estados de Aceitação", "Sub-Automatos", "Estados + Estados sub", "AcuráciaAut", "AcuráciaTkb", "AcuráciaAlignments", "Simplicidade", "Precisão"])#, "Generalização"
     
     display(result)
 
