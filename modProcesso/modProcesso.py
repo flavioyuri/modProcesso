@@ -14,6 +14,7 @@ from automaton2bpmn.to_automaton import removeAllSequencesOfRepetitions
 from automaton2bpmn.to_bpmn import dfa_to_bpmn
 from automaton2bpmn.to_bpmn import nfa_to_bpmn
 from pm4py.algo.evaluation.simplicity import algorithm as simplicity_evaluator
+from pm4py.algo.evaluation.generalization import algorithm as generalization_evaluator
 from pm4py.algo.conformance.alignments.petri_net import algorithm as alignments
 from pm4py.algo.evaluation.replay_fitness import algorithm as replay_fitness
 from pm4py.objects.conversion.wf_net.variants import to_bpmn
