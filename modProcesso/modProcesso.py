@@ -257,7 +257,7 @@ def nfa_to_petri_net(nfa):
             petri_utils.add_arc_from_to(transicoes[(s,a)], place,  net)
             for n_s in nfa.transition[s,a]:
               for n_aux, a_aux in nfa.transition:
-                if n_s == n_aux:
+                if n_s == n_aux and a_aux!='':
                   if n_s not in nfa.acceptStates:
                       
                       petri_utils.add_arc_from_to(place, transicoes[(n_aux,a_aux)], net)
