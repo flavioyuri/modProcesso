@@ -183,8 +183,7 @@ def dfa_to_petri_net(dfa):
           
     for s,a in dfa.transition:
         if (a!=''):
-          if s not in nIncluir:
-            petri_utils.add_arc_from_to(places[s], transicoes[(s,a)], net)
+          petri_utils.add_arc_from_to(places[s], transicoes[(s,a)], net)
           n_s = dfa.transition[s,a]
           if n_s not in dfa.acceptStates:
               petri_utils.add_arc_from_to(transicoes[(s,a)], places[n_s], net)
