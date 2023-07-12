@@ -1294,7 +1294,7 @@ def tabelamentoPorFrequencia(event_log, df, p, list_test, df_test, case_id, acti
       minJoinFalse= dfaJoinFalse.minimization()
       minJoinFalse.rename()
       #bpmn = dfa_to_bpmn(minJoinFalse, True)
-      net, im, fm = dfa_to_petri_net(bpmn)
+      net, im, fm = dfa_to_petri_net(minJoinFalse)
       alignments = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
       #if remInvisiveis:
       #    net = removeTransicoesInvisiveis(net)
