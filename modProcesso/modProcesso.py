@@ -49,6 +49,8 @@ from pm4py.algo.discovery.inductive import algorithm as inductive_miner
 from pm4py.visualization.bpmn import visualizer as bpmn_visualizer
 from pm4py.visualization.process_tree import visualizer as pt_visualizer
 from pm4py.objects.conversion.process_tree import converter as pt_converter
+from pm4py.objects.petri_net.obj import PetriNet, Marking
+from pm4py.objects.petri_net.utils import petri_utils
 import ipywidgets as widgets
 import matplotlib.pyplot as plt
 
@@ -157,6 +159,139 @@ def removeTransicoesInvisiveis(net):
 
 
   return net
+
+
+def dfa_to_petri_net(dfa):
+    net = PetriNet("new_petri_net")
+    #source = PetriNet.Place("source")
+    sink = PetriNet.Place("sink")
+    net.places.add(sink)
+    final_marking = Marking()
+    final_marking[sink] = 1
+    places = {}
+    transicoes = {}
+    i = 0
+    for s in dfa.states:
+        places[s] = PetriNet.Place(s)
+    
+    for s,a in dfa.transition:
+        if (a!=''):
+          t_1 = PetriNet.Transition("label" + str(i), a)
+          transicoes[(s,a)] = t_1
+          net.transitions.add(t_1)
+          i = i+1
+          
+    for s,a in dfa.transition:
+        if (a!=''):
+          if s not in nIncluir:
+            petri_utils.add_arc_from_to(places[s], transicoes[(s,a)], net)
+          n_s = dfa.transition[s,a]
+          if n_s not in dfa.acceptStates:
+              petri_utils.add_arc_from_to(transicoes[(s,a)], places[n_s], net)
+          else:
+              petri_utils.add_arc_from_to(transicoes[(s,a)], sink, net)
+              for n_aux, a_aux in dfa.transition:
+                if n_aux == n_s:
+                  petri_utils.add_arc_from_to(transicoes[(s,a)], places[n_s], net)
+                  break
+    
+    for s in places.keys():
+        if s not in dfa.acceptStates:
+            place = places.setdefault(s)
+            net.places.add(place)
+            if s == dfa.startState:
+                initial_marking = Marking()
+                initial_marking[place] = 1
+        else:
+          for n_s, a_s in dfa.transition:
+            if n_s == s:
+              place = places.setdefault(s)
+              net.places.add(place)
+              break
+    
+    
+    net = petri_utils.remove_unconnected_components(net)           
+    return net, initial_marking, final_marking
+
+def nfa_to_petri_net(nfa):
+    net = PetriNet("new_petri_net")
+    #source = PetriNet.Place("source")
+    sink = PetriNet.Place("sink")
+    net.places.add(sink)
+    final_marking = Marking()
+    final_marking[sink] = 1
+    places = {}
+    transicoes = {}
+    i = 0
+    for s in nfa.states:
+        places[s] = PetriNet.Place(s)
+    
+        
+    nIncluir = []
+    for s,a in nfa.transition:
+        if (a!=''):
+          #print("a", a)
+          t_1 = PetriNet.Transition("label" + str(i), a)
+          transicoes[(s,a)] = t_1
+          net.transitions.add(t_1)
+          i = i+1
+        if len(nfa.transition[s,a]) > 1:
+          for n_s in nfa.transition[s,a]:
+            nIncluir.append(n_s)
+    for s,a in nfa.transition:
+        if (a!=''):
+          if s not in nIncluir:
+            petri_utils.add_arc_from_to(places[s], transicoes[(s,a)], net)
+          if len(nfa.transition[s,a]) == 1:
+            for n_s in nfa.transition[s,a]:
+              if n_s not in nfa.acceptStates:
+                  petri_utils.add_arc_from_to(transicoes[(s,a)], places[n_s], net)
+              else:
+                  petri_utils.add_arc_from_to(transicoes[(s,a)], sink, net)
+                  for n_aux2, a_aux2 in nfa.transition:
+                    if n_aux2 == n_s:
+                      petri_utils.add_arc_from_to(transicoes[(s,a)], places[n_s], net)
+                      break
+          elif len(nfa.transition[s,a]) > 1:
+            place = PetriNet.Place(s+str(2))
+            net.places.add(place)
+            petri_utils.add_arc_from_to(transicoes[(s,a)], place,  net)
+            for n_s in nfa.transition[s,a]:
+              for n_aux, a_aux in nfa.transition:
+                if n_s == n_aux:
+                  if n_s not in nfa.acceptStates:
+                      
+                      petri_utils.add_arc_from_to(place, transicoes[(n_aux,a_aux)], net)
+                  else:
+                      petri_utils.add_arc_from_to(transicoes[(s,a)], sink, net)
+                      for n_aux2, a_aux2 in nfa.transition:
+                        if n_aux2 == n_s:
+                          petri_utils.add_arc_from_to(transicoes[(s,a)], places[n_s], net)
+                          break
+    
+    for s in places.keys():
+        if s not in nfa.acceptStates and s not in nIncluir:
+            place = places.setdefault(s)
+            net.places.add(place)
+            if s == nfa.startState:
+                initial_marking = Marking()
+                initial_marking[place] = 1
+        else:
+          for n_s, a_s in nfa.transition:
+            if n_s == s:
+              place = places.setdefault(s)
+              net.places.add(place)
+              break
+    
+    for s in nfa.states:
+        for s_aux in nfa.epsilon_closure[s]:
+          if s!=s_aux and s not in nIncluir and s_aux not in nIncluir:
+            petri_utils.add_arc_from_to(places[s], places[s_aux], net)
+    
+    net = petri_utils.remove_unconnected_components(net)            
+    return net, initial_marking, final_marking
+          
+
 
 
 def nfaBB_to_bpmn(nfa, remove_unnecessary_gateways=True):
@@ -1158,11 +1293,11 @@ def tabelamentoPorFrequencia(event_log, df, p, list_test, df_test, case_id, acti
       dfaJoinFalse.rename()
       minJoinFalse= dfaJoinFalse.minimization()
       minJoinFalse.rename()
-      bpmn = dfa_to_bpmn(minJoinFalse, True)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      #bpmn = dfa_to_bpmn(minJoinFalse, True)
+      net, im, fm = dfa_to_petri_net(bpmn)
       alignments = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
-      if remInvisiveis:
-          net = removeTransicoesInvisiveis(net)
+      #if remInvisiveis:
+      #    net = removeTransicoesInvisiveis(net)
       tkb = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
       prec = pm4py.precision_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
       #gen = generalization_evaluator.apply(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
@@ -1230,7 +1365,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
     fit = fitnessAutomata(nfa, df_test, sRet, False)
     bpmn = nfa_to_bpmn(nfa, remGat)
     gateways, tasks, flows = countBPMN(bpmn)
-    net, im, fm = pm4py.convert_to_petri_net(bpmn)
+    #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+    net, im, fm = pm4py.nfa_to_petri_net(nfa)
     simp = simplicity_evaluator.apply(net)
     resultados.append([f"Não-Determinística",len(nfa.alphabet),len(nfa.states),nfa.len_transition(),len(nfa.acceptStates), 0, nfa.len_states(), fit, simp])
     resultadosBPMN.append([f"Não-Determinística", gateways, tasks, flows, gateways+tasks])
@@ -1239,7 +1375,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
     fit = fitnessAutomata(dfa, df_test, sRet, False)
     bpmn = dfa_to_bpmn(dfa, remGat)
     gateways, tasks, flows = countBPMN(bpmn)
-    net, im, fm = pm4py.convert_to_petri_net(bpmn)
+    net, im, fm = pm4py.dfa_to_petri_net(dfa)
+    #net, im, fm = pm4py.convert_to_petri_net(bpmn)
     simp = simplicity_evaluator.apply(net)
     resultados.append([f"Determinística",len(dfa.alphabet),len(dfa.states),len(dfa.transition),len(dfa.acceptStates), "-", "-", fit, simp])
     resultadosBPMN.append([f"Determinística", gateways, tasks, flows, gateways+tasks])
@@ -1250,7 +1387,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
     fit = fitnessAutomata(min, df_test, sRet, False)
     bpmn = dfa_to_bpmn(min, remGat)
     gateways, tasks, flows = countBPMN(bpmn)
-    net, im, fm = pm4py.convert_to_petri_net(bpmn)
+    net, im, fm = pm4py.dfa_to_petri_net(min)
+    #net, im, fm = pm4py.convert_to_petri_net(bpmn)
     simp = simplicity_evaluator.apply(net)
     resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-", fit, simp])
     resultadosBPMN.append([f"Determinística min", gateways, tasks, flows, gateways+tasks])
@@ -1275,7 +1413,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       fit = fitnessAutomata(nfaCamMin, df_test, sRet, False)
       bpmn = nfa_to_bpmn(nfaCamMin, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      net, im, fm = pm4py.nfa_to_petri_net(nfaCamMin)
+      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Não-Determinística caminho mínimo",len(nfaCamMin.alphabet),len(nfaCamMin.states),nfaCamMin.len_transition(),len(nfaCamMin.acceptStates), 0, "-", fit, simp])
       resultadosBPMN.append([f"Não-Determinística caminho mínimo", gateways, tasks, flows, gateways+tasks])
@@ -1287,7 +1426,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       fit = fitnessAutomata(dfa, df_test, sRet, False)
       bpmn = dfa_to_bpmn(dfa, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      net, im, fm = pm4py.dfa_to_petri_net(dfa)
+      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística",len(dfa.alphabet),len(dfa.states),len(dfa.transition),len(dfa.acceptStates), "-", "-", fit, simp])
       resultadosBPMN.append([f"Determinística", gateways, tasks, flows, gateways+tasks])
@@ -1298,7 +1438,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       fit = fitnessAutomata(min, df_test, sRet, False)
       bpmn = dfa_to_bpmn(min, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      net, im, fm = pm4py.dfa_to_petri_net(min)
+      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-", fit, simp])
       resultadosBPMN.append([f"Determinística min", gateways, tasks, flows, gateways+tasks])
@@ -1310,8 +1451,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       fit = fitnessAutomata(nfaResultado, df_test, sRet, False)
       bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      simp = simplicity_evaluator.apply(net)
+      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      #simp = simplicity_evaluator.apply(net)
       resultados.append([f"Operação Sequencias min/max:3-25 estados DFA min caminhos mínimos",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, simp])
       resultadosBPMN.append([f"Operação Sequencias min/max:3-25 estados DFA min caminhos mínimos", gateways, tasks, flows, gateways+tasks])
 
@@ -1323,7 +1464,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       fit = fitnessAutomata(nfaReworkFalse, df_test, sRet, sRetTest)
       bpmn = nfa_to_bpmn(nfaReworkFalse, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      net, im, fm = pm4py.nfa_to_petri_net(nfaReworkFalse)
+      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Não-Determinística sem retrabalho",len(nfaReworkFalse.alphabet),len(nfaReworkFalse.states),nfaReworkFalse.len_transition(),len(nfaReworkFalse.acceptStates), 0, nfaReworkFalse.len_states(), fit, simp])
       resultadosBPMN.append([f"Não-Determinística sem retrabalho", gateways, tasks, flows, gateways+tasks])
@@ -1336,7 +1478,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       fit = fitnessAutomata(dfaFalse, df_test, sRet, sRetTest)
       bpmn = dfa_to_bpmn(dfaFalse, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      net, im, fm = pm4py.dfa_to_petri_net(dfaFalse)
+      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística s retrabalho",len(dfaFalse.alphabet),len(dfaFalse.states),len(dfaFalse.transition),len(dfaFalse.acceptStates), "-", "-", fit, simp])
       resultadosBPMN.append([f"Determinística s retrabalho", gateways, tasks, flows, gateways+tasks])
@@ -1348,7 +1491,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       fit = fitnessAutomata(minFalse, df_test, sRet, sRetTest)
       bpmn = dfa_to_bpmn(minFalse, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      net, im, fm = pm4py.dfa_to_petri_net(minFalse)
+      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística min s retrabalho",len(minFalse.alphabet),len(minFalse.states),len(minFalse.transition),len(minFalse.acceptStates), "-", "-", fit, simp])
       resultadosBPMN.append([f"Determinística min s retrabalho", gateways, tasks, flows, gateways+tasks])
@@ -1360,8 +1504,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
       bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      simp = simplicity_evaluator.apply(net)
+      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      #simp = simplicity_evaluator.apply(net)
       resultados.append([f"Operação Sequencias min/max:3-25 estados DFA min sem retrabalho",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, simp])
       resultadosBPMN.append([f"Operação Sequencias min/max:3-25 estados DFA min sem retrabalho", gateways, tasks, flows, gateways+tasks])
 
@@ -1372,7 +1516,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       fit = fitnessAutomata(nfaJoin, df_test, sRet, False)
       bpmn = nfa_to_bpmn(nfaJoin, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      net, im, fm = pm4py.nfa_to_petri_net(nfaJoin)
+      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Não-Determinística join",len(nfaJoin.alphabet),len(nfaJoin.states),nfaJoin.len_transition(),len(nfaJoin.acceptStates), 0, "-", fit, simp])
       resultadosBPMN.append([f"Não-Determinística join", gateways, tasks, flows, gateways+tasks])
@@ -1384,7 +1529,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       fit = fitnessAutomata(dfaJoin, df_test, sRet, False)
       bpmn = dfa_to_bpmn(dfaJoin, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      net, im, fm = pm4py.dfa_to_petri_net(dfaJoin)
+      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística join",len(nfaJoin.alphabet),len(nfaJoin.states),len(nfaJoin.transition),len(nfaJoin.acceptStates), "-" , "-", fit, simp])
       resultadosBPMN.append([f"Determinística join", gateways, tasks, flows, gateways+tasks])
@@ -1396,7 +1542,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       fit = fitnessAutomata(minJoin, df_test, sRet, False)
       bpmn = dfa_to_bpmn(minJoin, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      net, im, fm = pm4py.dfa_to_petri_net(minJoin)
+      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística min join",len(minJoin.alphabet),len(minJoin.states),len(minJoin.transition),len(minJoin.acceptStates), "-", "-", fit, simp])
       resultadosBPMN.append([f"Determinística min join", gateways, tasks, flows, gateways+tasks])
@@ -1408,8 +1555,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       fit = fitnessAutomata(nfaResultado, df_test, sRet, False)
       bpmn = nfaBB_to_bpmn(min, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      simp = simplicity_evaluator.apply(net)
+      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      #simp = simplicity_evaluator.apply(net)
       resultados.append([f"Operação Sequencias min/max:3-25 estados DFA min join",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, simp])
       resultadosBPMN.append([f"Operação Sequencias min/max:3-25 estados DFA min join", gateways, tasks, flows, gateways+tasks])
 
@@ -1419,7 +1566,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         fit = fitnessAutomata(nfaJoinFalse, df_test, sRet, sRetTest)
         bpmn = nfa_to_bpmn(nfaJoinFalse, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        net, im, fm = pm4py.nfa_to_petri_net(nfaJoinFalse)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Não-Determinística sem retrabalho join",len(nfaJoinFalse.alphabet),len(nfaJoinFalse.states),nfaJoinFalse.len_transition(),len(nfaJoinFalse.acceptStates), 0,"-", fit, simp])
         resultadosBPMN.append([f"Não-Determinística sem retrabalho join", gateways, tasks, flows, gateways+tasks])
@@ -1430,7 +1578,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         fit = fitnessAutomata(dfaJoinFalse, df_test, sRet, sRetTest)
         bpmn = dfa_to_bpmn(dfaJoinFalse, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        net, im, fm = pm4py.dfa_to_petri_net(dfaJoinFalse)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística sem retrabalho join",len(dfaJoinFalse.alphabet),len(dfaJoinFalse.states),len(dfaJoinFalse.transition),len(dfaJoinFalse.acceptStates), "-", "-", fit, simp])
         resultadosBPMN.append([f"Determinística sem retrabalho join", gateways, tasks, flows, gateways+tasks])
@@ -1442,7 +1591,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         fit = fitnessAutomata(minJoinFalse, df_test, sRet, sRetTest)
         bpmn = dfa_to_bpmn(minJoinFalse, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        net, im, fm = pm4py.dfa_to_petri_net(minJoinFalse)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística min sem retrabalho join",len(minJoinFalse.alphabet),len(minJoinFalse.states),len(minJoinFalse.transition),len(minJoinFalse.acceptStates), "-", "-", fit, simp])
         resultadosBPMN.append([f"Determinística min sem retrabalho join", gateways, tasks, flows, gateways+tasks])
@@ -1454,8 +1604,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
         bpmn = nfaBB_to_bpmn(min, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        simp = simplicity_evaluator.apply(net)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #simp = simplicity_evaluator.apply(net)
         resultados.append([f"Operação Sequencias min/max:3-25 estados DFA min sem retrabalho join",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, simp])
         resultadosBPMN.append([f"Operação Sequencias min/max:3-25 estados DFA min sem retrabalho join", gateways, tasks, flows, gateways+tasks])
 
@@ -1475,8 +1625,9 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       #fit = fitnessAutomata(nfa, df_test, sRet, sRetTest)
       bpmn = nfa_to_bpmn(nfa, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      net = removeTransicoesInvisiveis(net)
+      net, im, fm = pm4py.nfa_to_petri_net(nfa)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      #net = removeTransicoesInvisiveis(net)
       fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Não-Determinística",len(nfa.alphabet),len(nfa.states),nfa.len_transition(),len(nfa.acceptStates), 0, nfa.len_states(), fit['log_fitness'], simp])
@@ -1486,9 +1637,10 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       #fit = fitnessAutomata(dfa, df_test, sRet, sRetTest)
       bpmn = dfa_to_bpmn(dfa, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      if remInvisiveis:
-          net = removeTransicoesInvisiveis(net)
+      net, im, fm = pm4py.dfa_to_petri_net(dfa)
+    #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      #if remInvisiveis:
+      #    net = removeTransicoesInvisiveis(net)
       fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística",len(dfa.alphabet),len(dfa.states),len(dfa.transition),len(dfa.acceptStates), "-", "-", fit['log_fitness'], simp])
@@ -1500,9 +1652,10 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       #fit = fitnessAutomata(min, df_test, sRet, sRetTest)
       bpmn = dfa_to_bpmn(dfa, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      if remInvisiveis:
-          net = removeTransicoesInvisiveis(net)
+      net, im, fm = pm4py.dfa_to_petri_net(min)
+    #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      #if remInvisiveis:
+      #    net = removeTransicoesInvisiveis(net)
       fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-", fit['log_fitness'], simp])
@@ -1515,11 +1668,11 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
       bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      if remInvisiveis:
-          net = removeTransicoesInvisiveis(net)
-      fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
-      simp = simplicity_evaluator.apply(net)
+      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      #if remInvisiveis:
+      #    net = removeTransicoesInvisiveis(net)
+      #fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
+      #simp = simplicity_evaluator.apply(net)
       resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['log_fitness'], simp])
       resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min", gateways, tasks, flows, gateways+tasks])
 
@@ -1530,9 +1683,10 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(nfaCamMin, df_test, sRet, sRetTest)
         bpmn = nfa_to_bpmn(nfaCamMin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        if remInvisiveis:
-          net = removeTransicoesInvisiveis(net)
+        net, im, fm = pm4py.nfa_to_petri_net(nfaCamMin)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #if remInvisiveis:
+        #  net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Não-Determinística caminho mínimo",len(nfaCamMin.alphabet),len(nfaCamMin.states),nfaCamMin.len_transition(),len(nfaCamMin.acceptStates), 0, "-", fit['log_fitness'], simp])
@@ -1545,9 +1699,10 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(dfa, df_test, sRet, sRetTest)
         bpmn = dfa_to_bpmn(dfa, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        if remInvisiveis:
-          net = removeTransicoesInvisiveis(net)
+        net, im, fm = pm4py.dfa_to_petri_net(dfa)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #if remInvisiveis:
+        #  net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística",len(dfa.alphabet),len(dfa.states),len(dfa.transition),len(dfa.acceptStates), "-", "-", fit['log_fitness'], simp])
@@ -1559,9 +1714,10 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(min, df_test, sRet, sRetTest)
         bpmn = dfa_to_bpmn(min, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        if remInvisiveis:
-          net = removeTransicoesInvisiveis(net)
+        net, im, fm = pm4py.dfa_to_petri_net(min)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #if remInvisiveis:
+        #  net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-", fit['log_fitness'], simp])
@@ -1587,9 +1743,10 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(nfaReworkFalse, df_test, sRet, sRetTest)
         bpmn = nfa_to_bpmn(nfa, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        if remInvisiveis:
-          net = removeTransicoesInvisiveis(net)
+        net, im, fm = pm4py.nfa_to_petri_net(nfaReworkFalse)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #if remInvisiveis:
+        #  net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Não-Determinística sem retrabalho",len(nfaReworkFalse.alphabet),len(nfaReworkFalse.states),nfaReworkFalse.len_transition(),len(nfaReworkFalse.acceptStates), 0, nfaReworkFalse.len_states(), fit['log_fitness'], simp])
@@ -1603,9 +1760,10 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(dfaFalse, df_test, sRet, sRetTest)
         bpmn = dfa_to_bpmn(dfaFalse, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        if remInvisiveis:
-          net = removeTransicoesInvisiveis(net)
+        net, im, fm = pm4py.dfa_to_petri_net(dfaFalse)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #if remInvisiveis:
+        #  net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística s retrabalho",len(dfaFalse.alphabet),len(dfaFalse.states),len(dfaFalse.transition),len(dfaFalse.acceptStates), "-", "-", fit['log_fitness'], simp])
@@ -1618,9 +1776,10 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(minFalse, df_test, sRet, sRetTest)
         bpmn = dfa_to_bpmn(minFalse, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        if remInvisiveis:
-          net = removeTransicoesInvisiveis(net)
+        net, im, fm = pm4py.dfa_to_petri_net(minFalse)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #if remInvisiveis:
+        #  net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística min s retrabalho",len(minFalse.alphabet),len(minFalse.states),len(minFalse.transition),len(minFalse.acceptStates), "-", "-", fit['log_fitness'], simp])
@@ -1645,9 +1804,10 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(nfaJoin, df_test, sRet, sRetTest)
         bpmn = nfa_to_bpmn(nfaJoin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        if remInvisiveis:
-          net = removeTransicoesInvisiveis(net)
+        net, im, fm = pm4py.nfa_to_petri_net(nfaJoin)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #if remInvisiveis:
+        #  net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Não-Determinística join",len(nfaJoin.alphabet),len(nfaJoin.states),nfaJoin.len_transition(),len(nfaJoin.acceptStates), 0, "-", fit['log_fitness'], simp])
@@ -1660,9 +1820,10 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(dfaJoin, df_test, sRet, sRetTest)
         bpmn = dfa_to_bpmn(dfaJoin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        if remInvisiveis:
-          net = removeTransicoesInvisiveis(net)
+        net, im, fm = pm4py.dfa_to_petri_net(dfaJoin)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #if remInvisiveis:
+        #  net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística join",len(nfaJoin.alphabet),len(nfaJoin.states),len(nfaJoin.transition),len(nfaJoin.acceptStates), "-" , "-", fit['log_fitness'], simp])
@@ -1675,9 +1836,10 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(minJoin, df_test, sRet, sRetTest)
         bpmn = dfa_to_bpmn(minJoin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        if remInvisiveis:
-          net = removeTransicoesInvisiveis(net)
+        net, im, fm = pm4py.dfa_to_petri_net(minJoin)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #if remInvisiveis:
+        #  net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística min join",len(minJoin.alphabet),len(minJoin.states),len(minJoin.transition),len(minJoin.acceptStates), "-", "-", fit['log_fitness'], simp])
@@ -1701,9 +1863,10 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
           #fit = fitnessAutomata(nfaJoinFalse, df_test, sRet, sRetTest)
           bpmn = dfa_to_bpmn(dfa, remGat)
           gateways, tasks, flows = countBPMN(bpmn)
-          net, im, fm = pm4py.convert_to_petri_net(bpmn)
-          if remInvisiveis:
-              net = removeTransicoesInvisiveis(net)
+          net, im, fm = pm4py.nfa_to_petri_net(nfaJoinFalse)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+          #if remInvisiveis:
+          #    net = removeTransicoesInvisiveis(net)
           fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
           simp = simplicity_evaluator.apply(net)
           resultados.append([f"Não-Determinística sem retrabalho join",len(nfaJoinFalse.alphabet),len(nfaJoinFalse.states),nfaJoinFalse.len_transition(),len(nfaJoinFalse.acceptStates), 0,"-", fit['log_fitness'], simp])
@@ -1715,9 +1878,10 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
           #fit = fitnessAutomata(dfaJoinFalse, df_test, sRet, sRetTest)
           bpmn = dfa_to_bpmn(dfaJoinFalse, remGat)
           gateways, tasks, flows = countBPMN(bpmn)
-          net, im, fm = pm4py.convert_to_petri_net(bpmn)
-          if remInvisiveis:
-              net = removeTransicoesInvisiveis(net)
+          net, im, fm = pm4py.dfa_to_petri_net(dfaJoinFalse)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+          #if remInvisiveis:
+          #    net = removeTransicoesInvisiveis(net)
           fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
           simp = simplicity_evaluator.apply(net)
           resultados.append([f"Determinística sem retrabalho join",len(dfaJoinFalse.alphabet),len(dfaJoinFalse.states),len(dfaJoinFalse.transition),len(dfaJoinFalse.acceptStates), "-", "-", fit['log_fitness'], simp])
@@ -1730,9 +1894,10 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
           #fit = fitnessAutomata(minJoinFalse, df_test, sRet, sRetTest)
           bpmn = dfa_to_bpmn(minJoinFalse, remGat)
           gateways, tasks, flows = countBPMN(bpmn)
-          net, im, fm = pm4py.convert_to_petri_net(bpmn)
-          if remInvisiveis:
-              net = removeTransicoesInvisiveis(net)
+          net, im, fm = pm4py.dfa_to_petri_net(minJoinFalse)  
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+          #if remInvisiveis:
+          #    net = removeTransicoesInvisiveis(net)
           fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
           simp = simplicity_evaluator.apply(net)
           resultados.append([f"Determinística min sem retrabalho join",len(minJoinFalse.alphabet),len(minJoinFalse.states),len(minJoinFalse.transition),len(minJoinFalse.acceptStates), "-", "-", fit['log_fitness'], simp])
@@ -1765,7 +1930,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       #fit = fitnessAutomata(nfa, df_test, sRet, sRetTest)
       bpmn = nfa_to_bpmn(nfa, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      net, im, fm = pm4py.nfa_to_petri_net(nfa)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
       #net = removeTransicoesInvisiveis(net)
       fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
       simp = simplicity_evaluator.apply(net)
@@ -1776,7 +1942,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       #fit = fitnessAutomata(dfa, df_test, sRet, sRetTest)
       bpmn = dfa_to_bpmn(dfa, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      net, im, fm = pm4py.dfa_to_petri_net(dfa)
+    #net, im, fm = pm4py.convert_to_petri_net(bpmn)
       #net = removeTransicoesInvisiveis(net)
       fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
       simp = simplicity_evaluator.apply(net)
@@ -1789,7 +1956,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       #fit = fitnessAutomata(min, df_test, sRet, sRetTest)
       bpmn = dfa_to_bpmn(dfa, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      net, im, fm = pm4py.dfa_to_petri_net(min)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
       #net = removeTransicoesInvisiveis(net)
       fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
       simp = simplicity_evaluator.apply(net)
@@ -1803,10 +1971,10 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
       bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
       #net = removeTransicoesInvisiveis(net)
-      fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
-      simp = simplicity_evaluator.apply(net)
+      #fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
+      #simp = simplicity_evaluator.apply(net)
       resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['percFitTraces'], simp])
       resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min", gateways, tasks, flows, gateways+tasks])
 
@@ -1817,7 +1985,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(nfaCamMin, df_test, sRet, sRetTest)
         bpmn = nfa_to_bpmn(nfaCamMin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        net, im, fm = pm4py.nfa_to_petri_net(nfaCamMin)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
         #net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
@@ -1831,7 +2000,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(dfa, df_test, sRet, sRetTest)
         bpmn = dfa_to_bpmn(dfa, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        net, im, fm = pm4py.dfa_to_petri_net(dfa)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
         #net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
@@ -1844,7 +2014,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(min, df_test, sRet, sRetTest)
         bpmn = dfa_to_bpmn(min, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        net, im, fm = pm4py.dfa_to_petri_net(min)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
         #net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
@@ -1871,7 +2042,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(nfaReworkFalse, df_test, sRet, sRetTest)
         bpmn = nfa_to_bpmn(nfa, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        net, im, fm = pm4py.nfa_to_petri_net(nfaReworkFalse)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
         #net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
@@ -1886,7 +2058,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(dfaFalse, df_test, sRet, sRetTest)
         bpmn = dfa_to_bpmn(dfaFalse, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        net, im, fm = pm4py.dfa_to_petri_net(dfaFalse)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
         #net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
@@ -1900,7 +2073,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(minFalse, df_test, sRet, sRetTest)
         bpmn = dfa_to_bpmn(minFalse, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        net, im, fm = pm4py.dfa_to_petri_net(minFalse)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
         #net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
@@ -1926,7 +2100,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(nfaJoin, df_test, sRet, sRetTest)
         bpmn = nfa_to_bpmn(nfaJoin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        net, im, fm = pm4py.nfa_to_petri_net(nfaJoin)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
         #net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
@@ -1940,7 +2115,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(dfaJoin, df_test, sRet, sRetTest)
         bpmn = dfa_to_bpmn(dfaJoin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        net, im, fm = pm4py.dfa_to_petri_net(dfaJoin)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
         #net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
@@ -1954,7 +2130,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         #fit = fitnessAutomata(minJoin, df_test, sRet, sRetTest)
         bpmn = dfa_to_bpmn(minJoin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
-        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        net, im, fm = pm4py.dfa_to_petri_net(minJoin)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
         #net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
         simp = simplicity_evaluator.apply(net)
@@ -1979,7 +2156,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
           #fit = fitnessAutomata(nfaJoinFalse, df_test, sRet, sRetTest)
           bpmn = dfa_to_bpmn(dfa, remGat)
           gateways, tasks, flows = countBPMN(bpmn)
-          net, im, fm = pm4py.convert_to_petri_net(bpmn)
+          net, im, fm = pm4py.nfa_to_petri_net(nfaJoinFalse)  
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
           #net = removeTransicoesInvisiveis(net)
           fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
           simp = simplicity_evaluator.apply(net)
@@ -1992,7 +2170,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
           #fit = fitnessAutomata(dfaJoinFalse, df_test, sRet, sRetTest)
           bpmn = dfa_to_bpmn(dfaJoinFalse, remGat)
           gateways, tasks, flows = countBPMN(bpmn)
-          net, im, fm = pm4py.convert_to_petri_net(bpmn)
+          net, im, fm = pm4py.dfa_to_petri_net(dfaJoinFalse)
+            #net, im, fm = pm4py.convert_to_petri_net(bpmn)
           #net = removeTransicoesInvisiveis(net)
           fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
           simp = simplicity_evaluator.apply(net)
@@ -2006,7 +2185,8 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
           #fit = fitnessAutomata(minJoinFalse, df_test, sRet, sRetTest)
           bpmn = dfa_to_bpmn(minJoinFalse, remGat)
           gateways, tasks, flows = countBPMN(bpmn)
-          net, im, fm = pm4py.convert_to_petri_net(bpmn)
+          net, im, fm = pm4py.nfa_to_petri_net(minJoinFalse)  
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
           #net = removeTransicoesInvisiveis(net)
           fit = pm4py.fitness_alignments(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
           simp = simplicity_evaluator.apply(net)
