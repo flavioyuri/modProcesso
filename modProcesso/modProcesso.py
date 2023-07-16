@@ -173,14 +173,14 @@ def dfa_to_petri_net(dfa):
     i = 0
     for s in dfa.states:
         places[s] = PetriNet.Place(s)
-    
+
     for s,a in dfa.transition:
         if (a!=''):
           t_1 = PetriNet.Transition("label" + str(i), a)
           transicoes[(s,a)] = t_1
           net.transitions.add(t_1)
           i = i+1
-          
+
     for s,a in dfa.transition:
         if (a!=''):
           petri_utils.add_arc_from_to(places[s], transicoes[(s,a)], net)
@@ -193,7 +193,7 @@ def dfa_to_petri_net(dfa):
                 if n_aux == n_s:
                   petri_utils.add_arc_from_to(transicoes[(s,a)], places[n_s], net)
                   break
-    
+
     for s in places.keys():
         if s not in dfa.acceptStates:
             place = places.setdefault(s)
@@ -207,9 +207,9 @@ def dfa_to_petri_net(dfa):
               place = places.setdefault(s)
               net.places.add(place)
               break
-    
-    
-    net = petri_utils.remove_unconnected_components(net)           
+
+
+    net = petri_utils.remove_unconnected_components(net)
     return net, initial_marking, final_marking
 
 def nfa_to_petri_net(nfa):
@@ -224,71 +224,80 @@ def nfa_to_petri_net(nfa):
     i = 0
     for s in nfa.states:
         places[s] = PetriNet.Place(s)
-    
-        
+
+
     nIncluir = []
     for s,a in nfa.transition:
         if (a!=''):
           #print("a", a)
           t_1 = PetriNet.Transition("label" + str(i), a)
-          transicoes[(s,a)] = t_1
-          net.transitions.add(t_1)
-          i = i+1
+        else:
+          t_1 = PetriNet.Transition("label" + str(i), None)
+        transicoes[(s,a)] = t_1
+        net.transitions.add(t_1)
+        i = i+1
         if len(nfa.transition[s,a]) > 1:
           for n_s in nfa.transition[s,a]:
             nIncluir.append(n_s)
     for s,a in nfa.transition:
-        if (a!=''):
-          if s not in nIncluir:
-            petri_utils.add_arc_from_to(places[s], transicoes[(s,a)], net)
-          if len(nfa.transition[s,a]) == 1:
-            for n_s in nfa.transition[s,a]:
-              if n_s not in nfa.acceptStates:
-                  petri_utils.add_arc_from_to(transicoes[(s,a)], places[n_s], net)
-              else:
-                  petri_utils.add_arc_from_to(transicoes[(s,a)], sink, net)
-                  for n_aux2, a_aux2 in nfa.transition:
-                    if n_aux2 == n_s:
-                      petri_utils.add_arc_from_to(transicoes[(s,a)], places[n_s], net)
-                      break
-          elif len(nfa.transition[s,a]) > 1:
-            place = PetriNet.Place(s+str(2))
-            net.places.add(place)
-            petri_utils.add_arc_from_to(transicoes[(s,a)], place,  net)
-            for n_s in nfa.transition[s,a]:
-              for n_aux, a_aux in nfa.transition:
-                if n_s == n_aux and a_aux!='':
-                  if n_s not in nfa.acceptStates:
-                      
-                      petri_utils.add_arc_from_to(place, transicoes[(n_aux,a_aux)], net)
-                  else:
-                      petri_utils.add_arc_from_to(transicoes[(s,a)], sink, net)
-                      for n_aux2, a_aux2 in nfa.transition:
-                        if n_aux2 == n_s:
-                          petri_utils.add_arc_from_to(transicoes[(s,a)], places[n_s], net)
-                          break
-    
+        #if (a!=''):
+        if s not in nIncluir:
+          petri_utils.add_arc_from_to(places[s], transicoes[(s,a)], net)
+        if len(nfa.transition[s,a]) == 1:
+          for n_s in nfa.transition[s,a]:
+            if n_s not in nfa.acceptStates:
+                petri_utils.add_arc_from_to(transicoes[(s,a)], places[n_s], net)
+            else:
+                petri_utils.add_arc_from_to(transicoes[(s,a)], sink, net)
+                for n_aux2, a_aux2 in nfa.transition:
+                  if n_aux2 == n_s:
+                    petri_utils.add_arc_from_to(transicoes[(s,a)], places[n_s], net)
+                    break
+        elif len(nfa.transition[s,a]) > 1:
+          place = PetriNet.Place(s+str(2))
+          net.places.add(place)
+          petri_utils.add_arc_from_to(transicoes[(s,a)], place,  net)
+          for n_s in nfa.transition[s,a]:
+            for n_aux, a_aux in nfa.transition:
+              if n_s == n_aux:
+                if n_s not in nfa.acceptStates:
+                    #print("AQUI", n_aux, a_aux, transicoes[(n_aux,a_aux)])
+                    petri_utils.add_arc_from_to(place, transicoes[(n_aux,a_aux)], net)
+                else:
+                    petri_utils.add_arc_from_to(transicoes[(s,a)], sink, net)
+                    for n_aux2, a_aux2 in nfa.transition:
+                      if n_aux2 == n_s:
+                        petri_utils.add_arc_from_to(transicoes[(s,a)], places[n_s], net)
+                        break
+
+    #print("aqui!!!!!!!")
     for s in places.keys():
         if s not in nfa.acceptStates and s not in nIncluir:
             place = places.setdefault(s)
             net.places.add(place)
             if s == nfa.startState:
+                #print("problema é aqui")
                 initial_marking = Marking()
                 initial_marking[place] = 1
+                #print("ahahahha")
         else:
           for n_s, a_s in nfa.transition:
             if n_s == s:
               place = places.setdefault(s)
               net.places.add(place)
               break
-    
-    for s in nfa.states:
-        for s_aux in nfa.epsilon_closure[s]:
-          if s!=s_aux and s not in nIncluir and s_aux not in nIncluir:
-            petri_utils.add_arc_from_to(places[s], places[s_aux], net)
-    
-    net = petri_utils.remove_unconnected_components(net)            
+
+#    print("hm")
+    #for s in nfa.states:
+    #    for s_aux in nfa.epsilon_closure[s]:
+    #      if s!=s_aux and s not in nIncluir and s_aux not in nIncluir:
+    #        petri_utils.add_arc_from_to(places[s], places[s_aux], net)
+
+#    print("chega aqui?")
+    net = petri_utils.remove_unconnected_components(net)
     return net, initial_marking, final_marking
+
+
           
 
 
