@@ -1229,6 +1229,27 @@ def operacaoSequencias(automato_e, tamanhoMinimo, tamanhoMaximo):
   else:
     return automato
 
+
+
+
+def tabelamentoPetri(net):
+  resultadosPetri = []
+  resultadosPetri.append(["Rede de Petri algoritmo", len(net.places), len(net.transitions), len(net.arcs), len(places)+len(transitions)])
+
+  outPetri = widgets.Output()
+
+
+  tabsPetri = widgets.Tab(children=[outBPMN])
+  tabsPetri.set_title(0, 'Rede de Petri')
+  display(tabsPetri)
+  with outPetri:
+
+    display(pd.DataFrame(resultadosPetri,columns=[" ", "Places","Transições","Arcos", "Componentes"]))
+
+
+
+
+
 def countBPMN(bpmn):
   gateways = []
   tasks = []
@@ -1369,6 +1390,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
 
     resultados = []
     resultadosBPMN = []
+    resultadosPetri = []
     nfa = to_nfa(event_logFreq)
     fit = fitnessAutomata(nfa, df_test, sRet, False)
     bpmn = nfa_to_bpmn(nfa, remGat)
@@ -1376,8 +1398,9 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
     #net, im, fm = pm4py.convert_to_petri_net(bpmn)
     net, im, fm = nfa_to_petri_net(nfa)
     simp = simplicity_evaluator.apply(net)
-    resultados.append([f"Não-Determinística",len(nfa.alphabet),len(nfa.states),nfa.len_transition(),len(nfa.acceptStates), 0, nfa.len_states(), fit, simp])
+    resultados.append([f"Não-Determinística",len(nfa.alphabet),len(nfa.states),nfa.len_transition(),len(nfa.acceptStates), 0, nfa.len_states(), fit])
     resultadosBPMN.append([f"Não-Determinística", gateways, tasks, flows, gateways+tasks])
+    resultadosPetri.append([f"Não-Determinística", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit, simp])
     dfa = nfa.determinization()
     dfa.rename()
     fit = fitnessAutomata(dfa, df_test, sRet, False)
@@ -1388,7 +1411,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
     simp = simplicity_evaluator.apply(net)
     resultados.append([f"Determinística",len(dfa.alphabet),len(dfa.states),len(dfa.transition),len(dfa.acceptStates), "-", "-", fit, simp])
     resultadosBPMN.append([f"Determinística", gateways, tasks, flows, gateways+tasks])
-
+    resultadosPetri.append([f"Determinística", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit, simp])
 
     min= dfa.minimization()
     min.rename()
@@ -1400,7 +1423,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
     simp = simplicity_evaluator.apply(net)
     resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-", fit, simp])
     resultadosBPMN.append([f"Determinística min", gateways, tasks, flows, gateways+tasks])
-
+    resultadosPetri.append([f"Determinística min", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit, simp])
 
 
     min = dfaToNfa(min)
@@ -1426,6 +1449,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Não-Determinística caminho mínimo",len(nfaCamMin.alphabet),len(nfaCamMin.states),nfaCamMin.len_transition(),len(nfaCamMin.acceptStates), 0, "-", fit, simp])
       resultadosBPMN.append([f"Não-Determinística caminho mínimo", gateways, tasks, flows, gateways+tasks])
+      resultadosPetri.append([f"Não-Determinística caminho mínimo", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit, simp])
 
 
       dfa = nfaCamMin.determinization()
@@ -1439,7 +1463,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística",len(dfa.alphabet),len(dfa.states),len(dfa.transition),len(dfa.acceptStates), "-", "-", fit, simp])
       resultadosBPMN.append([f"Determinística", gateways, tasks, flows, gateways+tasks])
-
+      resultadosPetri.append([f"Determinística", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit, simp])
 
 
       min = dfa.minimization()
@@ -1451,7 +1475,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-", fit, simp])
       resultadosBPMN.append([f"Determinística min", gateways, tasks, flows, gateways+tasks])
-
+      resultadosPetri.append([f"Determinística min", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit, simp])
 
 
       min = dfaToNfa(min)
@@ -1477,7 +1501,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Não-Determinística sem retrabalho",len(nfaReworkFalse.alphabet),len(nfaReworkFalse.states),nfaReworkFalse.len_transition(),len(nfaReworkFalse.acceptStates), 0, nfaReworkFalse.len_states(), fit, simp])
       resultadosBPMN.append([f"Não-Determinística sem retrabalho", gateways, tasks, flows, gateways+tasks])
-
+      resultadosPetri.append([f"Não-Determinística sem retrabalho", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit, simp])
 
 
       dfaFalse = nfaReworkFalse.determinization()
@@ -1491,7 +1515,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística s retrabalho",len(dfaFalse.alphabet),len(dfaFalse.states),len(dfaFalse.transition),len(dfaFalse.acceptStates), "-", "-", fit, simp])
       resultadosBPMN.append([f"Determinística s retrabalho", gateways, tasks, flows, gateways+tasks])
-
+      resultadosPetri.append([f"Determinística s retrabalho", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit, simp])
 
 
       minFalse= dfaFalse.minimization()
@@ -1504,7 +1528,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística min s retrabalho",len(minFalse.alphabet),len(minFalse.states),len(minFalse.transition),len(minFalse.acceptStates), "-", "-", fit, simp])
       resultadosBPMN.append([f"Determinística min s retrabalho", gateways, tasks, flows, gateways+tasks])
-
+      resultadosPetri.append([f"Determinística min s retrabalho", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit, simp])
 
 
       min = dfaToNfa(minFalse)
@@ -1529,7 +1553,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Não-Determinística join",len(nfaJoin.alphabet),len(nfaJoin.states),nfaJoin.len_transition(),len(nfaJoin.acceptStates), 0, "-", fit, simp])
       resultadosBPMN.append([f"Não-Determinística join", gateways, tasks, flows, gateways+tasks])
-
+      resultadosPetri.append([f"Não-Determinística join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit, simp])
 
 
       dfaJoin = nfaJoin.determinization()
@@ -1542,7 +1566,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística join",len(nfaJoin.alphabet),len(nfaJoin.states),len(nfaJoin.transition),len(nfaJoin.acceptStates), "-" , "-", fit, simp])
       resultadosBPMN.append([f"Determinística join", gateways, tasks, flows, gateways+tasks])
-
+      resultadosPetri.append([f"Determinística join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit, simp])
 
 
       minJoin= dfaJoin.minimization()
@@ -1555,7 +1579,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística min join",len(minJoin.alphabet),len(minJoin.states),len(minJoin.transition),len(minJoin.acceptStates), "-", "-", fit, simp])
       resultadosBPMN.append([f"Determinística min join", gateways, tasks, flows, gateways+tasks])
-
+      resultadosPetri.append([f"Determinística min join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit, simp])
 
 
       min = dfaToNfa(minJoin)
@@ -1567,7 +1591,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       #simp = simplicity_evaluator.apply(net)
       resultados.append([f"Operação Sequencias min/max:3-25 estados DFA min join",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, simp])
       resultadosBPMN.append([f"Operação Sequencias min/max:3-25 estados DFA min join", gateways, tasks, flows, gateways+tasks])
-
+      
 
       if sRet:
         nfaJoinFalse = to_nfa_minimum_path_join_traces(event_logFreq, rework=False)
@@ -1579,7 +1603,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Não-Determinística sem retrabalho join",len(nfaJoinFalse.alphabet),len(nfaJoinFalse.states),nfaJoinFalse.len_transition(),len(nfaJoinFalse.acceptStates), 0,"-", fit, simp])
         resultadosBPMN.append([f"Não-Determinística sem retrabalho join", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Não-Determinística sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit, simp])
 
         dfaJoinFalse = nfaJoinFalse.determinization()
         dfaJoinFalse.rename()
@@ -1591,7 +1615,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística sem retrabalho join",len(dfaJoinFalse.alphabet),len(dfaJoinFalse.states),len(dfaJoinFalse.transition),len(dfaJoinFalse.acceptStates), "-", "-", fit, simp])
         resultadosBPMN.append([f"Determinística sem retrabalho join", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Determinística sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit, simp])
 
 
         minJoinFalse= dfaJoinFalse.minimization()
@@ -1604,7 +1628,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística min sem retrabalho join",len(minJoinFalse.alphabet),len(minJoinFalse.states),len(minJoinFalse.transition),len(minJoinFalse.acceptStates), "-", "-", fit, simp])
         resultadosBPMN.append([f"Determinística min sem retrabalho join", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Determinística min sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit, simp])
 
 
         min = dfaToNfa(minJoinFalse)
@@ -1640,6 +1664,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Não-Determinística",len(nfa.alphabet),len(nfa.states),nfa.len_transition(),len(nfa.acceptStates), 0, nfa.len_states(), fit['log_fitness']*100, simp])
       resultadosBPMN.append([f"Não-Determinística", gateways, tasks, flows, gateways+tasks])
+      resultadosPetri.append([f"Não-Determinística", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
       dfa = nfa.determinization()
       dfa.rename()
       #fit = fitnessAutomata(dfa, df_test, sRet, sRetTest)
@@ -1653,7 +1678,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística",len(dfa.alphabet),len(dfa.states),len(dfa.transition),len(dfa.acceptStates), "-", "-", fit['log_fitness']*100, simp])
       resultadosBPMN.append([f"Determinística", gateways, tasks, flows, gateways+tasks])
-
+      resultadosPetri.append([f"Determinística", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
       min= dfa.minimization()
       min.rename()
@@ -1668,7 +1693,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-", fit['log_fitness'], simp])
       resultadosBPMN.append([f"Determinística min", gateways, tasks, flows, gateways+tasks])
-
+      resultadosPetri.append([f"Determinística min", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
       min = dfaToNfa(min)
@@ -1683,7 +1708,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       #simp = simplicity_evaluator.apply(net)
       resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['log_fitness']*100, simp])
       resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min", gateways, tasks, flows, gateways+tasks])
-
+      
 
       #Caminho Mínimo
       if camMin:
@@ -1699,7 +1724,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Não-Determinística caminho mínimo",len(nfaCamMin.alphabet),len(nfaCamMin.states),nfaCamMin.len_transition(),len(nfaCamMin.acceptStates), 0, "-", fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Não-Determinística caminho mínimo", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Não-Determinística caminho mínimo", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
         dfa = nfaCamMin.determinization()
         #print(dfa.alphabet)
@@ -1715,7 +1740,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística",len(dfa.alphabet),len(dfa.states),len(dfa.transition),len(dfa.acceptStates), "-", "-", fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Determinística", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Determinística", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
         min = dfa.minimization()
@@ -1730,7 +1755,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-", fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Determinística min", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Determinística min", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
         min = dfaToNfa(min)
@@ -1759,7 +1784,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Não-Determinística sem retrabalho",len(nfaReworkFalse.alphabet),len(nfaReworkFalse.states),nfaReworkFalse.len_transition(),len(nfaReworkFalse.acceptStates), 0, nfaReworkFalse.len_states(), fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Não-Determinística sem retrabalho", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Não-Determinística sem retrabalho", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
         dfaFalse = nfaReworkFalse.determinization()
@@ -1776,7 +1801,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística s retrabalho",len(dfaFalse.alphabet),len(dfaFalse.states),len(dfaFalse.transition),len(dfaFalse.acceptStates), "-", "-", fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Determinística s retrabalho", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Determinística s retrabalho", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
         minFalse= dfaFalse.minimization()
@@ -1792,7 +1817,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística min s retrabalho",len(minFalse.alphabet),len(minFalse.states),len(minFalse.transition),len(minFalse.acceptStates), "-", "-", fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Determinística min s retrabalho", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Determinística min s retrabalho", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
         min = dfaToNfa(minFalse)
@@ -1820,7 +1845,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Não-Determinística join",len(nfaJoin.alphabet),len(nfaJoin.states),nfaJoin.len_transition(),len(nfaJoin.acceptStates), 0, "-", fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Não-Determinística join", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Não-Determinística join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
         dfaJoin = nfaJoin.determinization()
@@ -1836,7 +1861,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística join",len(nfaJoin.alphabet),len(nfaJoin.states),len(nfaJoin.transition),len(nfaJoin.acceptStates), "-" , "-", fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Determinística join", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Determinística join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
         minJoin= dfaJoin.minimization()
@@ -1852,7 +1877,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística min join",len(minJoin.alphabet),len(minJoin.states),len(minJoin.transition),len(minJoin.acceptStates), "-", "-", fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Determinística min join", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Determinística min join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
         min = dfaToNfa(minJoin)
@@ -1879,7 +1904,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
           simp = simplicity_evaluator.apply(net)
           resultados.append([f"Não-Determinística sem retrabalho join",len(nfaJoinFalse.alphabet),len(nfaJoinFalse.states),nfaJoinFalse.len_transition(),len(nfaJoinFalse.acceptStates), 0,"-", fit['log_fitness']*100, simp])
           resultadosBPMN.append([f"Não-Determinística sem retrabalho join", gateways, tasks, flows, gateways+tasks])
-
+          resultadosPetri.append([f"Não-Determinística sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
           dfaJoinFalse = nfaJoinFalse.determinization()
           dfaJoinFalse.rename()
@@ -1894,7 +1919,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
           simp = simplicity_evaluator.apply(net)
           resultados.append([f"Determinística sem retrabalho join",len(dfaJoinFalse.alphabet),len(dfaJoinFalse.states),len(dfaJoinFalse.transition),len(dfaJoinFalse.acceptStates), "-", "-", fit['log_fitness']*100, simp])
           resultadosBPMN.append([f"Determinística sem retrabalho join", gateways, tasks, flows, gateways+tasks])
-
+          resultadosPetri.append([f"Determinística sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
           minJoinFalse= dfaJoinFalse.minimization()
@@ -1910,7 +1935,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
           simp = simplicity_evaluator.apply(net)
           resultados.append([f"Determinística min sem retrabalho join",len(minJoinFalse.alphabet),len(minJoinFalse.states),len(minJoinFalse.transition),len(minJoinFalse.acceptStates), "-", "-", fit['log_fitness']*100, simp])
           resultadosBPMN.append([f"Determinística min sem retrabalho join", gateways, tasks, flows, gateways+tasks])
-
+          resultadosPetri.append([f"Determinística min sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
           min = dfaToNfa(minJoinFalse)
@@ -1945,6 +1970,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Não-Determinística",len(nfa.alphabet),len(nfa.states),nfa.len_transition(),len(nfa.acceptStates), 0, nfa.len_states(), fit['log_fitness']*100, simp])
       resultadosBPMN.append([f"Não-Determinística", gateways, tasks, flows, gateways+tasks])
+      resultadosPetri.append([f"Não-Determinística", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
       dfa = nfa.determinization()
       dfa.rename()
       #fit = fitnessAutomata(dfa, df_test, sRet, sRetTest)
@@ -1957,7 +1983,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística",len(dfa.alphabet),len(dfa.states),len(dfa.transition),len(dfa.acceptStates), "-", "-", fit['log_fitness']*100, simp])
       resultadosBPMN.append([f"Determinística", gateways, tasks, flows, gateways+tasks])
-
+      resultadosPetri.append([f"Determinística", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
       min= dfa.minimization()
       min.rename()
@@ -1971,7 +1997,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       simp = simplicity_evaluator.apply(net)
       resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-", fit['log_fitness']*100, simp])
       resultadosBPMN.append([f"Determinística min", gateways, tasks, flows, gateways+tasks])
-
+      resultadosPetri.append([f"Determinística min", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
       min = dfaToNfa(min)
@@ -2000,7 +2026,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Não-Determinística caminho mínimo",len(nfaCamMin.alphabet),len(nfaCamMin.states),nfaCamMin.len_transition(),len(nfaCamMin.acceptStates), 0, "-", fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Não-Determinística caminho mínimo", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Não-Determinística caminho mínimo", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
         dfa = nfaCamMin.determinization()
         #print(dfa.alphabet)
@@ -2015,7 +2041,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística",len(dfa.alphabet),len(dfa.states),len(dfa.transition),len(dfa.acceptStates), "-", "-", fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Determinística", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Determinística", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
         min = dfa.minimization()
@@ -2029,7 +2055,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-", fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Determinística min", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Determinística min", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
         min = dfaToNfa(min)
@@ -2057,7 +2083,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Não-Determinística sem retrabalho",len(nfaReworkFalse.alphabet),len(nfaReworkFalse.states),nfaReworkFalse.len_transition(),len(nfaReworkFalse.acceptStates), 0, nfaReworkFalse.len_states(), fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Não-Determinística sem retrabalho", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Não-Determinística sem retrabalho", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
         dfaFalse = nfaReworkFalse.determinization()
@@ -2073,7 +2099,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística s retrabalho",len(dfaFalse.alphabet),len(dfaFalse.states),len(dfaFalse.transition),len(dfaFalse.acceptStates), "-", "-", fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Determinística s retrabalho", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Determinística s retrabalho", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
         minFalse= dfaFalse.minimization()
@@ -2088,7 +2114,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística min s retrabalho",len(minFalse.alphabet),len(minFalse.states),len(minFalse.transition),len(minFalse.acceptStates), "-", "-", fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Determinística min s retrabalho", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Determinística min s retrabalho", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
         min = dfaToNfa(minFalse)
@@ -2115,7 +2141,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Não-Determinística join",len(nfaJoin.alphabet),len(nfaJoin.states),nfaJoin.len_transition(),len(nfaJoin.acceptStates), 0, "-", fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Não-Determinística join", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Não-Determinística join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
         dfaJoin = nfaJoin.determinization()
@@ -2130,7 +2156,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística join",len(nfaJoin.alphabet),len(nfaJoin.states),len(nfaJoin.transition),len(nfaJoin.acceptStates), "-" , "-", fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Determinística join", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Determinística join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
         minJoin= dfaJoin.minimization()
@@ -2145,7 +2171,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
         simp = simplicity_evaluator.apply(net)
         resultados.append([f"Determinística min join",len(minJoin.alphabet),len(minJoin.states),len(minJoin.transition),len(minJoin.acceptStates), "-", "-", fit['log_fitness']*100, simp])
         resultadosBPMN.append([f"Determinística min join", gateways, tasks, flows, gateways+tasks])
-
+        resultadosPetri.append([f"Determinística min join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
         min = dfaToNfa(minJoin)
@@ -2171,7 +2197,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
           simp = simplicity_evaluator.apply(net)
           resultados.append([f"Não-Determinística sem retrabalho join",len(nfaJoinFalse.alphabet),len(nfaJoinFalse.states),nfaJoinFalse.len_transition(),len(nfaJoinFalse.acceptStates), 0,"-", fit['log_fitness']*100, simp])
           resultadosBPMN.append([f"Não-Determinística sem retrabalho join", gateways, tasks, flows, gateways+tasks])
-
+          resultadosPetri.append([f"Não-Determinística sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
           dfaJoinFalse = nfaJoinFalse.determinization()
           dfaJoinFalse.rename()
@@ -2185,7 +2211,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
           simp = simplicity_evaluator.apply(net)
           resultados.append([f"Determinística sem retrabalho join",len(dfaJoinFalse.alphabet),len(dfaJoinFalse.states),len(dfaJoinFalse.transition),len(dfaJoinFalse.acceptStates), "-", "-", fit['log_fitness']*100, simp])
           resultadosBPMN.append([f"Determinística sem retrabalho join", gateways, tasks, flows, gateways+tasks])
-
+          resultadosPetri.append([f"Determinística sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
           minJoinFalse= dfaJoinFalse.minimization()
@@ -2200,7 +2226,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
           simp = simplicity_evaluator.apply(net)
           resultados.append([f"Determinística min sem retrabalho join",len(minJoinFalse.alphabet),len(minJoinFalse.states),len(minJoinFalse.transition),len(minJoinFalse.acceptStates), "-", "-", fit['log_fitness']*100, simp])
           resultadosBPMN.append([f"Determinística min sem retrabalho join", gateways, tasks, flows, gateways+tasks])
-
+          resultadosPetri.append([f"Determinística min sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
 
           min = dfaToNfa(minJoinFalse)
@@ -2264,6 +2290,33 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
 
     display(pd.DataFrame(resultadosBPMN,columns=["Referente à:", "Gateways","Tasks","Transições","Componentes"]))
 
+  outBPMN = widgets.Output()
+
+
+  tabsPetri = widgets.Tab(children=[outBPMN])
+  tabsPetri.set_title(0, 'Redes de Petri')
+  display(tabsPetri)
+  with outPetri:
+    text = "Tam log: " + str(len(event_log))
+
+    textfreq = "Frequência: " + str(get_most_frequent_traces(event_log, percentage=p)[1])
+    sum = 0
+    for x in event_log:
+      sum+=len(x)
+    textSum = "N° eventos: " + str(sum)
+
+
+    display(text)
+
+
+    display(textfreq)
+
+    display(textSum)
+
+    display(pd.DataFrame(resultadosPetri,columns=["Referente à:", "Places","Transições", "Arcos","Componentes", "Fitness", "Simplicidade"]))
+
+
+    
 def comparacao(bpmnAlpha, bpmnHeu, bpmnInd, fitAlpha, fitHeu, fitInd, train_csv, test_csv, df_test, tokenbased=True, camMin=True, sRet=True, join=True):
   comparacaoBPMN = []
   gateways, tasks, flows = countBPMN(bpmnAlpha)
