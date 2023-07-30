@@ -2293,7 +2293,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
   outPetri = widgets.Output()
 
 
-  tabsPetri = widgets.Tab(children=[outBPMN])
+  tabsPetri = widgets.Tab(children=[outPetri])
   tabsPetri.set_title(0, 'Redes de Petri')
   display(tabsPetri)
   with outPetri:
