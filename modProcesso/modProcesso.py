@@ -2290,7 +2290,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
 
     display(pd.DataFrame(resultadosBPMN,columns=["Referente à:", "Gateways","Tasks","Transições","Componentes"]))
 
-  outBPMN = widgets.Output()
+  outPetri = widgets.Output()
 
 
   tabsPetri = widgets.Tab(children=[outBPMN])
