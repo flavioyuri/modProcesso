@@ -1653,6 +1653,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
 
       resultados = []
       resultadosBPMN = []
+      resultadosPetri = []
       nfa = to_nfa(event_logFreq)
       #fit = fitnessAutomata(nfa, df_test, sRet, sRetTest)
       bpmn = nfa_to_bpmn(nfa, remGat)
@@ -1959,6 +1960,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
 
       resultados = []
       resultadosBPMN = []
+      resultadosPetri = []
       nfa = to_nfa(event_logFreq)
       #fit = fitnessAutomata(nfa, df_test, sRet, sRetTest)
       bpmn = nfa_to_bpmn(nfa, remGat)
