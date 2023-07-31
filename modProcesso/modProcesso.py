@@ -1946,7 +1946,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
           gateways, tasks, flows = countBPMN(bpmn)
           #net, im, fm = pm4py.convert_to_petri_net(bpmn)
           #fit = pm4py.fitness_alignments(df_test, net, im, fm)
-          resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min sem retrabalho join",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['log_fitness']*100, simp])
+          resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min sem retrabalho join",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['log_fitness']*100])
           resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min sem retrabalho join", gateways, tasks, flows, gateways+tasks])
 
 
