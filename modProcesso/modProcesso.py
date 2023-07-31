@@ -2436,7 +2436,10 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
       fit = pm4py.fitness_alignments(df_test, net, im, fm)
     comparacaoPetri.append(["DFA min sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
     
+  return comparacaoPetri
 
+
+def mostrarTabPetri(train_csv, comparacaoPetri)
 
 
   outPetri = widgets.Output()
