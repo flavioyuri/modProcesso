@@ -2599,8 +2599,8 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
           dicionario.setdefault(j, ("Trace "+str(j), i[1]))
           j = j+1
 
-    data = {"Trace" : traceUni, "Frequencia" : freqUni, "%":porcentagemUni}
-    event_freqUni = pd.DataFrame(data=data)
+    datauni = {"Trace" : traceUni, "Frequencia" : freqUni, "%":porcentagemUni}
+    event_freqUni = pd.DataFrame(data=datauni)
     if tabela:
       display(event_freq)
       display(event_freqUni)
