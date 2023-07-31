@@ -1692,7 +1692,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
       #    net = removeTransicoesInvisiveis(net)
       fit = pm4py.fitness_token_based_replay(df_test, net, im, fm, activity_key=activity, timestamp_key=time_timestamp, case_id_key=case_id)
       simp = simplicity_evaluator.apply(net)
-      resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-", fit['log_fitness']])
+      resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-", fit['log_fitness']*100])
       resultadosBPMN.append([f"Determinística min", gateways, tasks, flows, gateways+tasks])
       resultadosPetri.append([f"Determinística min", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']*100, simp])
 
