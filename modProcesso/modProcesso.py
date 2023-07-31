@@ -2341,7 +2341,7 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
 
       min = dfaToNfa(minJoinFalse)
       net, im, fm = nfa_to_petri_net(min)
-      if tokebased:
+      if tokenbased:
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
       else:
         fit = pm4py.fitness_alignments(df_test, net, im, fm)
@@ -2362,7 +2362,7 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
       min = dfaToNfa(minJoin)
       
       net, im, fm = nfa_to_petri_net(min)
-      if tokebased:
+      if tokenbased:
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
       else:
         fit = pm4py.fitness_alignments(df_test, net, im, fm)
@@ -2385,7 +2385,7 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
       min = dfaToNfa(min)
       
       net, im, fm = nfa_to_petri_net(min)
-      if tokebased:
+      if tokenbased:
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
       else:
         fit = pm4py.fitness_alignments(df_test, net, im, fm)
@@ -2407,7 +2407,7 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
       min = dfaToNfa(min)
       
       net, im, fm = nfa_to_petri_net(min)
-      if tokebased:
+      if tokenbased:
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
       else:
         fit = pm4py.fitness_alignments(df_test, net, im, fm)
@@ -2430,7 +2430,7 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
     min = dfaToNfa(min)
     
     net, im, fm = nfa_to_petri_net(min)
-    if tokebased:
+    if tokenbased:
       fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
     else:
       fit = pm4py.fitness_alignments(df_test, net, im, fm)
