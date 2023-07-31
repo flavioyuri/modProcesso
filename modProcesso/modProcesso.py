@@ -2439,11 +2439,11 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
 
 
 
-  outBPMN = widgets.Output()
-  tabsBPMN = widgets.Tab(children=[outBPMN])
-  tabsBPMN.set_title(0, 'BPMN')
-  display(tabsBPMN)
-  with outBPMN:
+  outPetri = widgets.Output()
+  tabsPetri = widgets.Tab(children=[outPetri])
+  tabsPetri.set_title(0, 'Redes de Petri')
+  display(tabsPetri)
+  with outPetri:
     text = "Tam log: " + str(len(train_csv))
     sum = 0
     for x in train_csv:
@@ -2456,7 +2456,7 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
 
     display(textSum)
 
-    display(pd.DataFrame(comparacaoBPMN,columns=["Referente à:", "Gateways","Tasks","Transições","Componentes", "Acurácia"]))
+    display(pd.DataFrame(comparacaoPetri,columns=["Referente à:", "Places","Transições","Arcos","Componentes", "Acurácia"]))
 
     
     
