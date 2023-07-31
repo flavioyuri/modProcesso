@@ -1384,7 +1384,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
 
   if acuraciaAutomato:
     l_mf_traces, acuracia = get_most_frequent_traces(event_log,percentage=p)
-    print(f"Frequencia por trace dos {p*100}% mais frequentes:\n",l_mf_traces)
+    print(f"Frequencia por trace dos {p*100}% mais frequentes)
     #print(f"{p*100}% dos traces mais frequentes:\n",[x[0] for x in l_mf_traces])
     event_logFreq = [x[0] for x in l_mf_traces]
 
@@ -1647,7 +1647,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
     if tokenbased:
       #Caminhos mais frequêntes
       l_mf_traces, acuracia = get_most_frequent_traces(event_log,percentage=p)
-      print(f"Frequencia por trace dos {p*100}% mais frequentes:\n",l_mf_traces)
+      print(f"Frequencia por trace dos {p*100}% mais frequentes)
       #print(f"{p*100}% dos traces mais frequentes:\n",[x[0] for x in l_mf_traces])
       event_logFreq = [x[0] for x in l_mf_traces]
 
@@ -1954,7 +1954,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
     else:
       #Caminhos mais frequêntes
       l_mf_traces, acuracia = get_most_frequent_traces(event_log,percentage=p)
-      print(f"Frequencia por trace dos {p*100}% mais frequentes:\n",l_mf_traces)
+      print(f"Frequencia por trace dos {p*100}% mais frequentes)
       #print(f"{p*100}% dos traces mais frequentes:\n",[x[0] for x in l_mf_traces])
       event_logFreq = [x[0] for x in l_mf_traces]
 
