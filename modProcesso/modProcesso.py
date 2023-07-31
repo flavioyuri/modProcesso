@@ -2317,7 +2317,149 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
 
     display(pd.DataFrame(resultadosPetri,columns=["Referente à:", "Places","Transições", "Arcos","Componentes", "Fitness", "Simplicidade"]))
 
+def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_csv, test_csv, df_test, list_test, tokenbased=True, camMin=True, sRet=True, join=True):
+  comparacaoPetri = []
+  comparacaoPetri.append([f"Alpha miner", len(netAlpha.places), len(netAlpha.transitions), len(netAlpha.arcs), len(netAlpha.places) + len(netAlpha.transitions), fitAlpha])
 
+  comparacaoPetri.append([f"Heuristic miner", len(netHeu.places), len(netHeu.transitions), len(netHeu.arcs), len(netHeu.places) + len(netHeu.transitions), fitHeu])
+
+  comparacaoPetri.append([f"Inductive miner", len(netInd.places), len(netInd.transitions), len(netInd.arcs), len(netInd.places) + len(netInd.transitions), fitInd])
+
+  if join:
+    if sRet:
+      nfaJoinFalse = to_nfa_minimum_path_join_traces(train_csv, rework=False)
+
+
+      dfaJoinFalse = nfaJoinFalse.determinization()
+
+
+
+      minJoinFalse= dfaJoinFalse.minimization()
+      minJoinFalse.rename()
+
+
+
+      min = dfaToNfa(minJoinFalse)
+      net, im, fm = nfa_to_petri_net(min)
+      if tokebased:
+        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+      else:
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+      comparacaoPetri.append(["DFA min sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
+    else:
+      nfaJoin = to_nfa_minimum_path_join_traces(train_csv, rework=True)
+
+
+      dfaJoin = nfaJoin.determinization()
+
+
+
+      minJoin= dfaJoin.minimization()
+      minJoin.rename()
+
+
+
+      min = dfaToNfa(minJoin)
+      
+      net, im, fm = nfa_to_petri_net(min)
+      if tokebased:
+        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+      else:
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+      comparacaoPetri.append(["DFA min retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
+
+  elif camMin:
+    if sRet:
+      nfaCamMin = to_nfa_minimum_path(train_csv, rework=False, nfa_bb=False)
+
+
+
+      dfa = nfaCamMin.determinization()
+
+
+
+      min = dfa.minimization()
+
+
+
+      min = dfaToNfa(min)
+      
+      net, im, fm = nfa_to_petri_net(min)
+      if tokebased:
+        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+      else:
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+      comparacaoPetri.append(["DFA min sem retrabalho cam min", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
+
+    else:
+      nfaCamMin = to_nfa_minimum_path(train_csv, nfa_bb=False)
+
+
+
+      dfa = nfaCamMin.determinization()
+
+
+
+      min = dfa.minimization()
+
+
+
+      min = dfaToNfa(min)
+      
+      net, im, fm = nfa_to_petri_net(min)
+      if tokebased:
+        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+      else:
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+      comparacaoPetri.append(["DFA min retrabalho cam min", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
+      
+
+  else:
+    nfa = to_nfa(train_csv)
+
+
+
+    dfa = nfa.determinization()
+
+
+
+    min = dfa.minimization()
+
+
+
+    min = dfaToNfa(min)
+    
+    net, im, fm = nfa_to_petri_net(min)
+    if tokebased:
+      fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+    else:
+      fit = pm4py.fitness_alignments(df_test, net, im, fm)
+    comparacaoPetri.append(["DFA min sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
+    
+
+
+
+  outBPMN = widgets.Output()
+  tabsBPMN = widgets.Tab(children=[outBPMN])
+  tabsBPMN.set_title(0, 'BPMN')
+  display(tabsBPMN)
+  with outBPMN:
+    text = "Tam log: " + str(len(train_csv))
+    sum = 0
+    for x in train_csv:
+      sum+=len(x)
+    textSum = "N° eventos: " + str(sum)
+
+
+    display(text)
+
+
+    display(textSum)
+
+    display(pd.DataFrame(comparacaoBPMN,columns=["Referente à:", "Gateways","Tasks","Transições","Componentes", "Acurácia"]))
+
+    
+    
     
 def comparacao(bpmnAlpha, bpmnHeu, bpmnInd, fitAlpha, fitHeu, fitInd, train_csv, test_csv, df_test, tokenbased=True, camMin=True, sRet=True, join=True):
   comparacaoBPMN = []
