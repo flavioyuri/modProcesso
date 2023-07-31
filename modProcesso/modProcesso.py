@@ -2439,7 +2439,7 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
   return comparacaoPetri
 
 
-def mostrarTabPetri(train_csv, comparacaoPetri)
+def mostrarTabPetri(train_csv, comparacaoPetri):
 
 
   outPetri = widgets.Output()
