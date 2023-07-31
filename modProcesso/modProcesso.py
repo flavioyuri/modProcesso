@@ -1220,7 +1220,7 @@ def operacaoSequencias(automato_e, tamanhoMinimo, tamanhoMaximo):
       errado, erros = verificaSequencias(novoAutomato, tamanhoMinimo)
       #print("ESTÁ ERRADO?", errado, erros)
 
-      if errado == False:
+      if len(erros) == 0:
         return novoAutomato
       else:
         raise TypeError("Sequência(s) deveria(m) estar modularizada(s)", erros)
@@ -2265,7 +2265,7 @@ def tabelamento(event_log, df_test, case_id, activity, time_timestamp, minimo=3,
     display(textfreq)
 
     display(textSum)
-    display(pd.DataFrame(resultados,columns=["Máquina de Estados","Atividades","Estados","Transições","Estados de Aceitação", "Sub-Automatos", "Estados + Estados sub", "Acurácia", "Simplicidade"]))
+    display(pd.DataFrame(resultados,columns=["Máquina de Estados","Atividades","Estados","Transições","Estados de Aceitação", "Sub-Automatos", "Estados + Estados sub", "Acurácia"]))
 
   outBPMN = widgets.Output()
 
