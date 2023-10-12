@@ -1365,7 +1365,7 @@ def acuraciasPetri(event_log, df_test, tokenbased = True):
 
 
 
-def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin=True, sRet=True, join=True, p=1, remGat = True, acuraciaAutomato=True):
+def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin=True, sRet=True, join=True, p=1, remGat = True, acuraciaAutomato=True, case_id='Case ID', activity='Activity', time_timestamp='Complete Timestamp'):
 
   if acuraciaAutomato:
     l_mf_traces, acuracia = get_most_frequent_traces(event_log,percentage=p)
