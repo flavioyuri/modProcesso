@@ -2538,6 +2538,27 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
   return comparacaoPetri
 
 
+def mostrarTabPetri(train_csv, tabela):
+    outBPMN = widgets.Output()
+    tabsBPMN = widgets.Tab(children=[outBPMN])
+    tabsBPMN.set_title(0, 'Comparação')
+    display(tabsBPMN)
+    with outBPMN:
+      text = "Tam log: " + str(len(train_csv))
+      sum = 0
+      for x in train_csv:
+        sum+=len(x)
+      textSum = "N° eventos: " + str(sum)
+
+
+      display(text)
+
+
+      display(textSum)
+
+      display(pd.DataFrame(tabela,columns=["Modelo:", "Places","Transições","Arcos", "Componentes", "Acurácia"]))
+
+
 
 def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, repeticao=True):
   if repeticao:
