@@ -1364,7 +1364,7 @@ def acuraciasPetri(event_log, df_test, tokenbased = True):
 
 
 
-def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin=True, sRet=True, join=True, p=1, remGat = True, acuraciaAutomato=True, tokenbased=True):
+def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin=True, sRet=True, join=True, p=1, remGat = True, acuraciaAutomato=True, tokenbased=True, case_id='Case ID', activity='Activity', time_timestamp='Complete Timestamp'):
 
   if acuraciaAutomato:
     l_mf_traces, acuracia = get_most_frequent_traces(event_log,percentage=p)
@@ -2415,7 +2415,7 @@ def tabTraces(lista):
 
 
 
-def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_csv, test_csv, df_test, list_test, tokenbased=True, camMin=True, sRet=True, join=True):
+def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_csv, test_csv, df_test, list_test, tokenbased=True, camMin=True, sRet=True, join=True, case_id='Case ID', activity='Activity', time_timestamp='Complete Timestamp'):
   comparacaoPetri = []
   comparacaoPetri.append([f"Alpha miner", len(netAlpha.places), len(netAlpha.transitions), len(netAlpha.arcs), len(netAlpha.places) + len(netAlpha.transitions), fitAlpha])
 
