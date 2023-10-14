@@ -5,7 +5,7 @@ from teocomp.dfa import DFA
 from teocomp.nfa import NFA
 from teocomp.nfa_e import NFA_E
 from teocomp.nfa_bb import NFA_BB
-#from google.colab import files
+from google.colab import files
 from automaton2bpmn.to_automaton import to_nfa_minimum_path
 from automaton2bpmn.to_automaton import to_nfa_minimum_path_join_traces
 from automaton2bpmn.to_automaton import to_nfa
@@ -26,7 +26,6 @@ import os.path
 import io
 import pandas as pd
 import unittest
-import xmltodict
 from IPython.display import display, Markdown
 #!pip install pm4py
 import pm4py
@@ -1286,187 +1285,55 @@ def mostraTabFreq(event_log, resultados):
 
 
 
-def comparacaoPetri(netMin, im, fm, netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_csv, test_csv, df_test, list_test, tokenbased=True, camMin=True, sRet=True, join=True):
-  comparacaoPetri = []
-  comparacaoPetri.append([f"Alpha miner", len(netAlpha.places), len(netAlpha.transitions), len(netAlpha.arcs), len(netAlpha.places) + len(netAlpha.transitions), fitAlpha])
-
-  comparacaoPetri.append([f"Heuristic miner", len(netHeu.places), len(netHeu.transitions), len(netHeu.arcs), len(netHeu.places) + len(netHeu.transitions), fitHeu])
-
-  comparacaoPetri.append([f"Inductive miner", len(netInd.places), len(netInd.transitions), len(netInd.arcs), len(netInd.places) + len(netInd.transitions), fitInd])
-
-  if join:
-    if sRet:
-      if tokebased:
-        fit = pm4py.fitness_token_based_replay(df_test, netMin, im, fm)
-      else:
-        fit = pm4py.fitness_alignments(df_test, netMin, im, fm)
-      comparacaoPetri.append(["DFA min sem retrabalho join", len(netMin.places), len(netMin.transitions), len(netMin.arcs), len(netMin.places) + len(netMin.transitions), fit['log_fitness']])
-    else:
-      nfaJoin = to_nfa_minimum_path_join_traces(train_csv, rework=True)
-
-
-      dfaJoin = nfaJoin.determinization()
-
-
-
-      minJoin= dfaJoin.minimization()
-      minJoin.rename()
-
-
-
-      min = dfaToNfa(minJoin)
-
-      net, im, fm = nfa_to_petri_net(min)
-      if tokebased:
-        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-      else:
-        fit = pm4py.fitness_alignments(df_test, net, im, fm)
-      comparacaoPetri.append(["DFA min retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
-
-  elif camMin:
-    if sRet:
-      nfaCamMin = to_nfa_minimum_path(train_csv, rework=False, nfa_bb=False)
-
-
-
-      dfa = nfaCamMin.determinization()
-
-
-
-      min = dfa.minimization()
-
-
-
-      min = dfaToNfa(min)
-
-      net, im, fm = nfa_to_petri_net(min)
-      if tokebased:
-        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-      else:
-        fit = pm4py.fitness_alignments(df_test, net, im, fm)
-      comparacaoPetri.append(["DFA min sem retrabalho cam min", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
-
-    else:
-      nfaCamMin = to_nfa_minimum_path(train_csv, nfa_bb=False)
-
-
-
-      dfa = nfaCamMin.determinization()
-
-
-
-      min = dfa.minimization()
-
-
-
-      min = dfaToNfa(min)
-
-      net, im, fm = nfa_to_petri_net(min)
-      if tokebased:
-        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-      else:
-        fit = pm4py.fitness_alignments(df_test, net, im, fm)
-      comparacaoPetri.append(["DFA min retrabalho cam min", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
-
-
-  else:
-    nfa = to_nfa(train_csv)
-
-
-
-    dfa = nfa.determinization()
-
-
-
-    min = dfa.minimization()
-
-
-
-    min = dfaToNfa(min)
-
-    net, im, fm = nfa_to_petri_net(min)
-    if tokebased:
-      fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-    else:
-      fit = pm4py.fitness_alignments(df_test, net, im, fm)
-    comparacaoPetri.append(["DFA min sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
-
-
-
-
-  outBPMN = widgets.Output()
-  tabsBPMN = widgets.Tab(children=[outBPMN])
-  tabsBPMN.set_title(0, 'BPMN')
-  display(tabsBPMN)
-  with outBPMN:
-    text = "Tam log: " + str(len(train_csv))
-    sum = 0
-    for x in train_csv:
-      sum+=len(x)
-    textSum = "N° eventos: " + str(sum)
-
-
-    display(text)
-
-
-    display(textSum)
-
-    display(pd.DataFrame(comparacaoBPMN,columns=["Referente à:", "Gateways","Tasks","Transições","Componentes", "Acurácia"]))
-
-
-
-
-
-
 
 def acuraciasPetri(event_log, df_test, tokenbased = True):
   if tokenbased:
     acuracia = []
     net, im, fm = constroiPetri("detMin")
     fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-    acuracia.append([f"Determinística mínima", fit['log_fitness']*100])
+    acuracia.append([f"Determinística mínima", fit])
 
     net, im, fm = constroiPetri("detCamMin")
     fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-    acuracia.append([f"Determinística mínima caminhos mínimos", fit['log_fitness']*100])
+    acuracia.append([f"Determinística mínima caminhos mínimos", fit])
 
     net, im, fm = constroiPetri("minFalse")
     fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-    acuracia.append([f"Determinística mínima s ret", fit['log_fitness']*100])
+    acuracia.append([f"Determinística mínima s ret", fit])
 
 
     net, im, fm = constroiPetri("minJoin")
     fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-    acuracia.append([f"Determinística mínima join", fit['log_fitness']*100])
+    acuracia.append([f"Determinística mínima join", fit])
 
 
     net, im, fm = constroiPetri("minJoinFalse")
     fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-    acuracia.append([f"Determinística mínima s ret join", fit['log_fitness']*100])
+    acuracia.append([f"Determinística mínima s ret join", fit])
 
   else:
     acuracia = []
     net, im, fm = constroiPetri("detMin")
     fit = pm4py.fitness_alignments(df_test, net, im, fm)
-    acuracia.append([f"Determinística mínima", fit['log_fitness']*100])
+    acuracia.append([f"Determinística mínima", fit])
 
     net, im, fm = constroiPetri("detCamMin")
     fit = pm4py.fitness_alignments(df_test, net, im, fm)
-    acuracia.append([f"Determinística mínima caminhos mínimos", fit['log_fitness']*100])
+    acuracia.append([f"Determinística mínima caminhos mínimos", fit])
 
     net, im, fm = constroiPetri("minFalse")
     fit = pm4py.fitness_alignments(df_test, net, im, fm)
-    acuracia.append([f"Determinística mínima s ret", fit['log_fitness']*100])
+    acuracia.append([f"Determinística mínima s ret", fit])
 
 
     net, im, fm = constroiPetri("minJoin")
     fit = pm4py.fitness_alignments(df_test, net, im, fm)
-    acuracia.append([f"Determinística mínima join", fit['log_fitness']*100])
+    acuracia.append([f"Determinística mínima join", fit])
 
 
     net, im, fm = constroiPetri("minJoinFalse")
     fit = pm4py.fitness_alignments(df_test, net, im, fm)
-    acuracia.append([f"Determinística mínima s ret join", fit['log_fitness']*100])
+    acuracia.append([f"Determinística mínima s ret join", fit])
 
   tabsBPMN = widgets.Tab(children=[outBPMN])
   tabsBPMN.set_title(0, 'Acurácia')
@@ -1497,7 +1364,7 @@ def acuraciasPetri(event_log, df_test, tokenbased = True):
 
 
 
-def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin=True, sRet=True, join=True, p=1, remGat = True, acuraciaAutomato=True, case_id='Case ID', activity='Activity', time_timestamp='Complete Timestamp'):
+def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin=True, sRet=True, join=True, p=1, remGat = True, acuraciaAutomato=True, tokenbased=True):
 
   if acuraciaAutomato:
     l_mf_traces, acuracia = get_most_frequent_traces(event_log,percentage=p)
@@ -1745,105 +1612,50 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
 
 
   else:
-    #Caminhos mais frequêntes
-    l_mf_traces, acuracia = get_most_frequent_traces(event_log,percentage=p)
-    print(f"Frequencia por trace dos {p*100}% mais frequentes:\n",l_mf_traces)
-    #print(f"{p*100}% dos traces mais frequentes:\n",[x[0] for x in l_mf_traces])
-    event_logFreq = [x[0] for x in l_mf_traces]
+    if tokenbased:
+      #Caminhos mais frequêntes
+      l_mf_traces, acuracia = get_most_frequent_traces(event_log,percentage=p)
+      print(f"Frequencia por trace dos {p*100}% mais frequentes:\n",l_mf_traces)
+      #print(f"{p*100}% dos traces mais frequentes:\n",[x[0] for x in l_mf_traces])
+      event_logFreq = [x[0] for x in l_mf_traces]
 
-    resultados = []
-    resultadosBPMN = []
-    nfa = to_nfa(event_logFreq)
-    #fit = fitnessAutomata(nfa, df_test, sRet, sRetTest)
-    #bpmn = nfa_to_bpmn(nfa, remGat)
-    #gateways, tasks, flows = countBPMN(bpmn)
-    #net = removeTransicoesInvisiveis(net)
-    #net, im, fm = pm4py.convert_to_petri_net(bpmn)
-    #fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-    #simp = simplicity_evaluator.apply(net)
-    #resultados.append([f"Não-Determinística",len(nfa.alphabet),len(nfa.states),nfa.len_transition(),len(nfa.acceptStates), 0, nfa.len_states(), fit['percFitTraces'], simp])
-    #resultadosBPMN.append([f"Não-Determinística", gateways, tasks, flows, gateways+tasks])
-    dfa = nfa.determinization()
-    dfa.rename()
-    #fit = fitnessAutomata(dfa, df_test, sRet, sRetTest)
-    #bpmn = dfa_to_bpmn(dfa, remGat)
-    #gateways, tasks, flows = countBPMN(bpmn)
-    #net, im, fm = pm4py.convert_to_petri_net(bpmn)
-    #net = removeTransicoesInvisiveis(net)
-    #fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-    #simp = simplicity_evaluator.apply(net)
-    #resultados.append([f"Determinística",len(dfa.alphabet),len(dfa.states),len(dfa.transition),len(dfa.acceptStates), "-", "-", fit['percFitTraces'], simp])
-    #resultadosBPMN.append([f"Determinística", gateways, tasks, flows, gateways+tasks])
-
-
-    min= dfa.minimization()
-    min.rename()
-    #fit = fitnessAutomata(min, df_test, sRet, sRetTest)
-    #bpmn = dfa_to_bpmn(dfa, remGat)
-    #gateways, tasks, flows = countBPMN(bpmn)
-    #net, im, fm = pm4py.convert_to_petri_net(bpmn)
-    #net = removeTransicoesInvisiveis(net)
-    #fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-    #simp = simplicity_evaluator.apply(net)
-    #resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-", fit['percFitTraces'], simp])
-    dfaToXml(min, "DetMin")
-    #resultadosBPMN.append([f"Determinística min", gateways, tasks, flows, gateways+tasks])
-
-
-
-    '''min = dfaToNfa(min)
-    nfaResultado = operacaoSequencias(min, minimo, maximo)
-    #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
-    bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
-    gateways, tasks, flows = countBPMN(bpmn)
-    net, im, fm = pm4py.convert_to_petri_net(bpmn)
-    net = removeTransicoesInvisiveis(net)
-    fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-    simp = simplicity_evaluator.apply(net)
-    resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['percFitTraces'], simp])
-    resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min", gateways, tasks, flows, gateways+tasks])
-  '''
-
-    #Caminho Mínimo
-    if camMin:
-      nfaCamMin = to_nfa_minimum_path(event_logFreq, nfa_bb=False)
-      #fit = fitnessAutomata(nfaCamMin, df_test, sRet, sRetTest)
-      '''bpmn = nfa_to_bpmn(nfaCamMin, remGat)
+      resultados = []
+      acuracia = []
+      nfa = to_nfa(event_logFreq)
+      #fit = fitnessAutomata(nfa, df_test, sRet, sRetTest)
+      bpmn = nfa_to_bpmn(nfa, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
       net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      net = removeTransicoesInvisiveis(net)
+      #net = removeTransicoesInvisiveis(net)
       fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-      simp = simplicity_evaluator.apply(net)
-      resultados.append([f"Não-Determinística caminho mínimo",len(nfaCamMin.alphabet),len(nfaCamMin.states),nfaCamMin.len_transition(),len(nfaCamMin.acceptStates), 0, "-", fit['percFitTraces'], simp])
-      resultadosBPMN.append([f"Não-Determinística caminho mínimo", gateways, tasks, flows, gateways+tasks])
-  '''
-
-      dfa = nfaCamMin.determinization()
-      #print(dfa.alphabet)
+      #simp = simplicity_evaluator.apply(net)
+      resultados.append([f"Não-Determinística",len(nfa.alphabet),len(nfa.states),nfa.len_transition(),len(nfa.acceptStates), 0, nfa.len_states()])
+      acuracia.append([f"Não-Determinística", fit['log_fitness']])
+      dfa = nfa.determinization()
       dfa.rename()
       #fit = fitnessAutomata(dfa, df_test, sRet, sRetTest)
-      '''bpmn = dfa_to_bpmn(dfa, remGat)
+      bpmn = dfa_to_bpmn(dfa, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
       net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      net = removeTransicoesInvisiveis(net)
+      #net = removeTransicoesInvisiveis(net)
       fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-      simp = simplicity_evaluator.apply(net)
-      resultados.append([f"Determinística",len(dfa.alphabet),len(dfa.states),len(dfa.transition),len(dfa.acceptStates), "-", "-", fit['percFitTraces'], simp])
-      resultadosBPMN.append([f"Determinística", gateways, tasks, flows, gateways+tasks])
-  '''
+      #simp = simplicity_evaluator.apply(net)
+      resultados.append([f"Determinística",len(dfa.alphabet),len(dfa.states),len(dfa.transition),len(dfa.acceptStates), "-", "-"])
+      acuracia.append([f"Determinística", fit['log_fitness']])
 
 
-      min = dfa.minimization()
-      dfaToXml(min, "detCamMin")
+      min= dfa.minimization()
+      min.rename()
       #fit = fitnessAutomata(min, df_test, sRet, sRetTest)
-      '''bpmn = dfa_to_bpmn(min, remGat)
+      bpmn = dfa_to_bpmn(dfa, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
       net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      net = removeTransicoesInvisiveis(net)
+      #net = removeTransicoesInvisiveis(net)
       fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-      simp = simplicity_evaluator.apply(net)
-      resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-", fit['percFitTraces'], simp])
-      resultadosBPMN.append([f"Determinística min", gateways, tasks, flows, gateways+tasks])
+      #simp = simplicity_evaluator.apply(net)
+      resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-"])
+      #dfaToXml(min, "DetMin")
+      acuracia.append([f"Determinística min", fit['log_fitness']])
 
 
 
@@ -1853,174 +1665,507 @@ def tabelamento(event_log, df_test, minimo=3, maximo=25, sRetTest = True, camMin
       bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
       gateways, tasks, flows = countBPMN(bpmn)
       #net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      #fit = pm4py.fitness_alignments(df_test, net, im, fm)
-      resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min caminhos mínimos",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['percFitTraces'], simp])
-      resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min caminhos mínimos", gateways, tasks, flows, gateways+tasks])
-  '''
+      #net = removeTransicoesInvisiveis(net)
+      #fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+      #simp = simplicity_evaluator.apply(net)
+      resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states()])
+      #acuracia.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min", gateways, tasks, flows, gateways+tasks])
+    
 
-
-    #Sem retrabalho
-    if sRet:
-      nfaReworkFalse = to_nfa_minimum_path(event_logFreq, rework=False, nfa_bb=False)
-      #fit = fitnessAutomata(nfaReworkFalse, df_test, sRet, sRetTest)
-      '''bpmn = nfa_to_bpmn(nfa, remGat)
-      gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      net = removeTransicoesInvisiveis(net)
-      fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-      simp = simplicity_evaluator.apply(net)
-      resultados.append([f"Não-Determinística sem retrabalho",len(nfaReworkFalse.alphabet),len(nfaReworkFalse.states),nfaReworkFalse.len_transition(),len(nfaReworkFalse.acceptStates), 0, nfaReworkFalse.len_states(), fit['percFitTraces'], simp])
-      resultadosBPMN.append([f"Não-Determinística sem retrabalho", gateways, tasks, flows, gateways+tasks])
-  '''
-
-
-      dfaFalse = nfaReworkFalse.determinization()
-      #print(dfa.alphabet)
-      dfaFalse.rename()
-      #fit = fitnessAutomata(dfaFalse, df_test, sRet, sRetTest)
-      '''bpmn = dfa_to_bpmn(dfaFalse, remGat)
-      gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      net = removeTransicoesInvisiveis(net)
-      fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-      simp = simplicity_evaluator.apply(net)
-      resultados.append([f"Determinística s retrabalho",len(dfaFalse.alphabet),len(dfaFalse.states),len(dfaFalse.transition),len(dfaFalse.acceptStates), "-", "-", fit['percFitTraces'], simp])
-      resultadosBPMN.append([f"Determinística s retrabalho", gateways, tasks, flows, gateways+tasks])
-  '''
-
-
-      minFalse= dfaFalse.minimization()
-      minFalse.rename()
-      dfaToXml(minFalse, "minFalse")
-      #fit = fitnessAutomata(minFalse, df_test, sRet, sRetTest)
-      '''bpmn = dfa_to_bpmn(minFalse, remGat)
-      gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      net = removeTransicoesInvisiveis(net)
-      fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-      simp = simplicity_evaluator.apply(net)
-      resultados.append([f"Determinística min s retrabalho",len(minFalse.alphabet),len(minFalse.states),len(minFalse.transition),len(minFalse.acceptStates), "-", "-", fit['percFitTraces'], simp])
-      resultadosBPMN.append([f"Determinística min s retrabalho", gateways, tasks, flows, gateways+tasks])
-
-
-
-      min = dfaToNfa(minFalse)
-      nfaResultado = operacaoSequencias(min, minimo, maximo)
-      #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
-      bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
-      gateways, tasks, flows = countBPMN(bpmn)
-      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      #fit = pm4py.fitness_alignments(df_test, net, im, fm)
-      resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min sem retrabalho",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['percFitTraces'], simp])
-      resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min sem retrabalho", gateways, tasks, flows, gateways+tasks])
-  '''
-
-    #Sem caminhos repetidos
-    if join:
-      nfaJoin = to_nfa_minimum_path_join_traces(event_logFreq)
-      #fit = fitnessAutomata(nfaJoin, df_test, sRet, sRetTest)
-      '''bpmn = nfa_to_bpmn(nfaJoin, remGat)
-      gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      net = removeTransicoesInvisiveis(net)
-      fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-      simp = simplicity_evaluator.apply(net)
-      resultados.append([f"Não-Determinística join",len(nfaJoin.alphabet),len(nfaJoin.states),nfaJoin.len_transition(),len(nfaJoin.acceptStates), 0, "-", fit['percFitTraces'], simp])
-      resultadosBPMN.append([f"Não-Determinística join", gateways, tasks, flows, gateways+tasks])
-  '''
-
-
-      dfaJoin = nfaJoin.determinization()
-      dfaJoin.rename()
-      #fit = fitnessAutomata(dfaJoin, df_test, sRet, sRetTest)
-      '''bpmn = dfa_to_bpmn(dfaJoin, remGat)
-      gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      net = removeTransicoesInvisiveis(net)
-      fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-      simp = simplicity_evaluator.apply(net)
-      resultados.append([f"Determinística join",len(nfaJoin.alphabet),len(nfaJoin.states),len(nfaJoin.transition),len(nfaJoin.acceptStates), "-" , "-", fit['percFitTraces'], simp])
-      resultadosBPMN.append([f"Determinística join", gateways, tasks, flows, gateways+tasks])
-  '''
-
-      minJoin= dfaJoin.minimization()
-      minJoin.rename()
-      dfaToXml(minJoin, "minJoin")
-      #fit = fitnessAutomata(minJoin, df_test, sRet, sRetTest)
-      '''bpmn = dfa_to_bpmn(minJoin, remGat)
-      gateways, tasks, flows = countBPMN(bpmn)
-      net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      net = removeTransicoesInvisiveis(net)
-      fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-      simp = simplicity_evaluator.apply(net)
-      resultados.append([f"Determinística min join",len(minJoin.alphabet),len(minJoin.states),len(minJoin.transition),len(minJoin.acceptStates), "-", "-", fit['percFitTraces'], simp])
-      resultadosBPMN.append([f"Determinística min join", gateways, tasks, flows, gateways+tasks])
-
-
-
-      min = dfaToNfa(minJoin)
-      nfaResultado = operacaoSequencias(min, minimo, maximo)
-      #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
-      bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
-      gateways, tasks, flows = countBPMN(bpmn)
-      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      #fit = pm4py.fitness_alignments(df_test, net, im, fm)
-      resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min join",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['percFitTraces'], simp])
-      resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min join", gateways, tasks, flows, gateways+tasks])
-
-  '''
-      if sRet:
-        nfaJoinFalse = to_nfa_minimum_path_join_traces(event_logFreq, rework=False)
-        #fit = fitnessAutomata(nfaJoinFalse, df_test, sRet, sRetTest)
-        '''bpmn = dfa_to_bpmn(dfa, remGat)
+      #Caminho Mínimo
+      if camMin:
+        nfaCamMin = to_nfa_minimum_path(event_logFreq, nfa_bb=False)
+        #fit = fitnessAutomata(nfaCamMin, df_test, sRet, sRetTest)
+        bpmn = nfa_to_bpmn(nfaCamMin, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        net = removeTransicoesInvisiveis(net)
+        #net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-        simp = simplicity_evaluator.apply(net)
-        resultados.append([f"Não-Determinística sem retrabalho join",len(nfaJoinFalse.alphabet),len(nfaJoinFalse.states),nfaJoinFalse.len_transition(),len(nfaJoinFalse.acceptStates), 0,"-", fit['percFitTraces'], simp])
-        resultadosBPMN.append([f"Não-Determinística sem retrabalho join", gateways, tasks, flows, gateways+tasks])
-  '''
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Não-Determinística caminho mínimo",len(nfaCamMin.alphabet),len(nfaCamMin.states),nfaCamMin.len_transition(),len(nfaCamMin.acceptStates), 0, "-"])
+        acuracia.append([f"Não-Determinística caminho mínimo", fit['log_fitness']])
+    
 
-        dfaJoinFalse = nfaJoinFalse.determinization()
-        dfaJoinFalse.rename()
-        #fit = fitnessAutomata(dfaJoinFalse, df_test, sRet, sRetTest)
-        '''bpmn = dfa_to_bpmn(dfaJoinFalse, remGat)
+        dfa = nfaCamMin.determinization()
+        #print(dfa.alphabet)
+        dfa.rename()
+        #fit = fitnessAutomata(dfa, df_test, sRet, sRetTest)
+        bpmn = dfa_to_bpmn(dfa, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        net = removeTransicoesInvisiveis(net)
+        #net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-        simp = simplicity_evaluator.apply(net)
-        resultados.append([f"Determinística sem retrabalho join",len(dfaJoinFalse.alphabet),len(dfaJoinFalse.states),len(dfaJoinFalse.transition),len(dfaJoinFalse.acceptStates), "-", "-", fit['percFitTraces'], simp])
-        resultadosBPMN.append([f"Determinística sem retrabalho join", gateways, tasks, flows, gateways+tasks])
-  '''
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Determinística",len(dfa.alphabet),len(dfa.states),len(dfa.transition),len(dfa.acceptStates), "-", "-"])
+        acuracia.append([f"Determinística", fit['log_fitness']])
+    
 
 
-        minJoinFalse= dfaJoinFalse.minimization()
-        minJoinFalse.rename()
-        dfaToXml(minJoinFalse, "minJoinFalse")
-        #fit = fitnessAutomata(minJoinFalse, df_test, sRet, sRetTest)
-        '''bpmn = dfa_to_bpmn(minJoinFalse, remGat)
+        min = dfa.minimization()
+        dfaToXml(min, "detCamMin")
+        #fit = fitnessAutomata(min, df_test, sRet, sRetTest)
+        bpmn = dfa_to_bpmn(min, remGat)
         gateways, tasks, flows = countBPMN(bpmn)
         net, im, fm = pm4py.convert_to_petri_net(bpmn)
-        net = removeTransicoesInvisiveis(net)
+        #net = removeTransicoesInvisiveis(net)
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
-        simp = simplicity_evaluator.apply(net)
-        resultados.append([f"Determinística min sem retrabalho join",len(minJoinFalse.alphabet),len(minJoinFalse.states),len(minJoinFalse.transition),len(minJoinFalse.acceptStates), "-", "-", fit['percFitTraces'], simp])
-        resultadosBPMN.append([f"Determinística min sem retrabalho join", gateways, tasks, flows, gateways+tasks])
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-"])
+        acuracia.append([f"Determinística min", fit['log_fitness']])
 
 
 
-        min = dfaToNfa(minJoinFalse)
+        min = dfaToNfa(min)
         nfaResultado = operacaoSequencias(min, minimo, maximo)
         #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
-        bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
-        gateways, tasks, flows = countBPMN(bpmn)
+        #bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
+        #gateways, tasks, flows = countBPMN(bpmn)
         #net, im, fm = pm4py.convert_to_petri_net(bpmn)
         #fit = pm4py.fitness_alignments(df_test, net, im, fm)
-        resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min sem retrabalho join",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit['percFitTraces'], simp])
-        resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min sem retrabalho join", gateways, tasks, flows, gateways+tasks])
-  '''
+        resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min caminhos mínimos",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states()])
+        #resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min caminhos mínimos", gateways, tasks, flows, gateways+tasks])
+    
+
+
+      #Sem retrabalho
+      if sRet:
+        nfaReworkFalse = to_nfa_minimum_path(event_logFreq, rework=False, nfa_bb=False)
+        #fit = fitnessAutomata(nfaReworkFalse, df_test, sRet, sRetTest)
+        bpmn = nfa_to_bpmn(nfa, remGat)
+        gateways, tasks, flows = countBPMN(bpmn)
+        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #net = removeTransicoesInvisiveis(net)
+        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Não-Determinística sem retrabalho",len(nfaReworkFalse.alphabet),len(nfaReworkFalse.states),nfaReworkFalse.len_transition(),len(nfaReworkFalse.acceptStates), 0, nfaReworkFalse.len_states()])
+        acuracia.append([f"Não-Determinística sem retrabalho", fit['log_fitness']])
+    
+
+
+        dfaFalse = nfaReworkFalse.determinization()
+        #print(dfa.alphabet)
+        dfaFalse.rename()
+        #fit = fitnessAutomata(dfaFalse, df_test, sRet, sRetTest)
+        bpmn = dfa_to_bpmn(dfaFalse, remGat)
+        gateways, tasks, flows = countBPMN(bpmn)
+        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #net = removeTransicoesInvisiveis(net)
+        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Determinística s retrabalho",len(dfaFalse.alphabet),len(dfaFalse.states),len(dfaFalse.transition),len(dfaFalse.acceptStates), "-", "-"])
+        acuracia.append([f"Determinística s retrabalho", fit['log_fitness']])
+
+
+
+        minFalse= dfaFalse.minimization()
+        minFalse.rename()
+        #dfaToXml(minFalse, "minFalse")
+        #fit = fitnessAutomata(minFalse, df_test, sRet, sRetTest)
+        bpmn = dfa_to_bpmn(minFalse, remGat)
+        gateways, tasks, flows = countBPMN(bpmn)
+        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #net = removeTransicoesInvisiveis(net)
+        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Determinística min s retrabalho",len(minFalse.alphabet),len(minFalse.states),len(minFalse.transition),len(minFalse.acceptStates), "-", "-"])
+        acuracia.append([f"Determinística min s retrabalho", fit['log_fitness']])
+
+
+
+        min = dfaToNfa(minFalse)
+        nfaResultado = operacaoSequencias(min, minimo, maximo)
+        #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
+        #bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
+        #gateways, tasks, flows = countBPMN(bpmn)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min sem retrabalho",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states()])
+        #resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min sem retrabalho", gateways, tasks, flows, gateways+tasks])
+    
+
+      #Sem caminhos repetidos
+      if join:
+        nfaJoin = to_nfa_minimum_path_join_traces(event_logFreq)
+        #fit = fitnessAutomata(nfaJoin, df_test, sRet, sRetTest)
+        bpmn = nfa_to_bpmn(nfaJoin, remGat)
+        gateways, tasks, flows = countBPMN(bpmn)
+        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #net = removeTransicoesInvisiveis(net)
+        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Não-Determinística join",len(nfaJoin.alphabet),len(nfaJoin.states),nfaJoin.len_transition(),len(nfaJoin.acceptStates), 0, "-"])
+        acuracia.append([f"Não-Determinística join", fit['log_fitness']])
+    
+
+
+        dfaJoin = nfaJoin.determinization()
+        dfaJoin.rename()
+        #fit = fitnessAutomata(dfaJoin, df_test, sRet, sRetTest)
+        bpmn = dfa_to_bpmn(dfaJoin, remGat)
+        gateways, tasks, flows = countBPMN(bpmn)
+        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #net = removeTransicoesInvisiveis(net)
+        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Determinística join",len(nfaJoin.alphabet),len(nfaJoin.states),len(nfaJoin.transition),len(nfaJoin.acceptStates), "-" , "-"])
+        acuracia.append([f"Determinística join", fit['log_fitness']])
+    
+
+        minJoin= dfaJoin.minimization()
+        minJoin.rename()
+        #dfaToXml(minJoin, "minJoin")
+        #fit = fitnessAutomata(minJoin, df_test, sRet, sRetTest)
+        bpmn = dfa_to_bpmn(minJoin, remGat)
+        gateways, tasks, flows = countBPMN(bpmn)
+        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #net = removeTransicoesInvisiveis(net)
+        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Determinística min join",len(minJoin.alphabet),len(minJoin.states),len(minJoin.transition),len(minJoin.acceptStates), "-", "-"])
+        acuracia.append([f"Determinística min join", fit['log_fitness']])
+
+
+
+        min = dfaToNfa(minJoin)
+        nfaResultado = operacaoSequencias(min, minimo, maximo)
+        #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
+        #bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
+        #gateways, tasks, flows = countBPMN(bpmn)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min join",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states()])
+        #resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min join", gateways, tasks, flows, gateways+tasks])
+
+    
+        if sRet:
+          nfaJoinFalse = to_nfa_minimum_path_join_traces(event_logFreq, rework=False)
+          #fit = fitnessAutomata(nfaJoinFalse, df_test, sRet, sRetTest)
+          bpmn = nfa_to_bpmn(nfaJoinFalse, remGat)
+          gateways, tasks, flows = countBPMN(bpmn)
+          net, im, fm = pm4py.convert_to_petri_net(bpmn)
+          #net = removeTransicoesInvisiveis(net)
+          fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+          #simp = simplicity_evaluator.apply(net)
+          resultados.append([f"Não-Determinística sem retrabalho join",len(nfaJoinFalse.alphabet),len(nfaJoinFalse.states),nfaJoinFalse.len_transition(),len(nfaJoinFalse.acceptStates), 0,"-"])
+          acuracia.append([f"Não-Determinística sem retrabalho join", fit['log_fitness']])
+    
+
+          dfaJoinFalse = nfaJoinFalse.determinization()
+          dfaJoinFalse.rename()
+          #fit = fitnessAutomata(dfaJoinFalse, df_test, sRet, sRetTest)
+          bpmn = dfa_to_bpmn(dfaJoinFalse, remGat)
+          gateways, tasks, flows = countBPMN(bpmn)
+          net, im, fm = pm4py.convert_to_petri_net(bpmn)
+          #net = removeTransicoesInvisiveis(net)
+          fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+          #simp = simplicity_evaluator.apply(net)
+          resultados.append([f"Determinística sem retrabalho join",len(dfaJoinFalse.alphabet),len(dfaJoinFalse.states),len(dfaJoinFalse.transition),len(dfaJoinFalse.acceptStates), "-", "-"])
+          acuracia.append([f"Determinística sem retrabalho join", fit['log_fitness']])
+    
+
+
+          minJoinFalse= dfaJoinFalse.minimization()
+          minJoinFalse.rename()
+          #dfaToXml(minJoinFalse, "minJoinFalse")
+          #fit = fitnessAutomata(minJoinFalse, df_test, sRet, sRetTest)
+          bpmn = dfa_to_bpmn(minJoinFalse, remGat)
+          gateways, tasks, flows = countBPMN(bpmn)
+          net, im, fm = pm4py.convert_to_petri_net(bpmn)
+          #net = removeTransicoesInvisiveis(net)
+          fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+          #simp = simplicity_evaluator.apply(net)
+          resultados.append([f"Determinística min sem retrabalho join",len(minJoinFalse.alphabet),len(minJoinFalse.states),len(minJoinFalse.transition),len(minJoinFalse.acceptStates), "-", "-"])
+          acuracia.append([f"Determinística min sem retrabalho join", fit['log_fitness']])
+
+
+
+          min = dfaToNfa(minJoinFalse)
+          nfaResultado = operacaoSequencias(min, minimo, maximo)
+          #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
+          #bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
+          #gateways, tasks, flows = countBPMN(bpmn)
+          #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+          #fit = pm4py.fitness_alignments(df_test, net, im, fm)
+          resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min sem retrabalho join",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states()])
+          #resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min sem retrabalho join", gateways, tasks, flows, gateways+tasks])
+    
+    else:
+      #Caminhos mais frequêntes
+      l_mf_traces, acuracia = get_most_frequent_traces(event_log,percentage=p)
+      print(f"Frequencia por trace dos {p*100}% mais frequentes:\n",l_mf_traces)
+      #print(f"{p*100}% dos traces mais frequentes:\n",[x[0] for x in l_mf_traces])
+      event_logFreq = [x[0] for x in l_mf_traces]
+
+      resultados = []
+      acuracia = []
+      nfa = to_nfa(event_logFreq)
+      #fit = fitnessAutomata(nfa, df_test, sRet, sRetTest)
+      bpmn = nfa_to_bpmn(nfa, remGat)
+      gateways, tasks, flows = countBPMN(bpmn)
+      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      #net = removeTransicoesInvisiveis(net)
+      fit = pm4py.fitness_alignments(df_test, net, im, fm)
+      #simp = simplicity_evaluator.apply(net)
+      resultados.append([f"Não-Determinística",len(nfa.alphabet),len(nfa.states),nfa.len_transition(),len(nfa.acceptStates), 0, nfa.len_states()])
+      acuracia.append([f"Não-Determinística", fit['log_fitness']])
+      dfa = nfa.determinization()
+      dfa.rename()
+      #fit = fitnessAutomata(dfa, df_test, sRet, sRetTest)
+      bpmn = dfa_to_bpmn(dfa, remGat)
+      gateways, tasks, flows = countBPMN(bpmn)
+      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      #net = removeTransicoesInvisiveis(net)
+      fit = pm4py.fitness_alignments(df_test, net, im, fm)
+      #simp = simplicity_evaluator.apply(net)
+      resultados.append([f"Determinística",len(dfa.alphabet),len(dfa.states),len(dfa.transition),len(dfa.acceptStates), "-", "-"])
+      acuracia.append([f"Determinística", fit['log_fitness']])
+
+
+      min= dfa.minimization()
+      min.rename()
+      #fit = fitnessAutomata(min, df_test, sRet, sRetTest)
+      bpmn = dfa_to_bpmn(dfa, remGat)
+      gateways, tasks, flows = countBPMN(bpmn)
+      net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      #net = removeTransicoesInvisiveis(net)
+      fit = pm4py.fitness_alignments(df_test, net, im, fm)
+      #simp = simplicity_evaluator.apply(net)
+      resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-"])
+      #dfaToXml(min, "DetMin")
+      acuracia.append([f"Determinística min", fit['log_fitness']])
+
+
+
+      min = dfaToNfa(min)
+      nfaResultado = operacaoSequencias(min, minimo, maximo)
+      #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
+      #bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
+      #gateways, tasks, flows = countBPMN(bpmn)
+      #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+      #net = removeTransicoesInvisiveis(net)
+      #fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+      #simp = simplicity_evaluator.apply(net)
+      resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states()])
+      #acuracia.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min", gateways, tasks, flows, gateways+tasks])
+    
+
+      #Caminho Mínimo
+      if camMin:
+        nfaCamMin = to_nfa_minimum_path(event_logFreq, nfa_bb=False)
+        #fit = fitnessAutomata(nfaCamMin, df_test, sRet, sRetTest)
+        bpmn = nfa_to_bpmn(nfaCamMin, remGat)
+        gateways, tasks, flows = countBPMN(bpmn)
+        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #net = removeTransicoesInvisiveis(net)
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Não-Determinística caminho mínimo",len(nfaCamMin.alphabet),len(nfaCamMin.states),nfaCamMin.len_transition(),len(nfaCamMin.acceptStates), 0, "-"])
+        acuracia.append([f"Não-Determinística caminho mínimo", fit['log_fitness']])
+    
+
+        dfa = nfaCamMin.determinization()
+        #print(dfa.alphabet)
+        dfa.rename()
+        #fit = fitnessAutomata(dfa, df_test, sRet, sRetTest)
+        bpmn = dfa_to_bpmn(dfa, remGat)
+        gateways, tasks, flows = countBPMN(bpmn)
+        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #net = removeTransicoesInvisiveis(net)
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Determinística",len(dfa.alphabet),len(dfa.states),len(dfa.transition),len(dfa.acceptStates), "-", "-"])
+        acuracia.append([f"Determinística", fit['log_fitness']])
+    
+
+
+        min = dfa.minimization()
+        dfaToXml(min, "detCamMin")
+        #fit = fitnessAutomata(min, df_test, sRet, sRetTest)
+        bpmn = dfa_to_bpmn(min, remGat)
+        gateways, tasks, flows = countBPMN(bpmn)
+        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #net = removeTransicoesInvisiveis(net)
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Determinística min",len(min.alphabet),len(min.states),len(min.transition),len(min.acceptStates), "-", "-"])
+        acuracia.append([f"Determinística min", fit['log_fitness']])
+
+
+
+        min = dfaToNfa(min)
+        nfaResultado = operacaoSequencias(min, minimo, maximo)
+        #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
+        #bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
+        #gateways, tasks, flows = countBPMN(bpmn)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min caminhos mínimos",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states()])
+        #resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min caminhos mínimos", gateways, tasks, flows, gateways+tasks])
+    
+
+
+      #Sem retrabalho
+      if sRet:
+        nfaReworkFalse = to_nfa_minimum_path(event_logFreq, rework=False, nfa_bb=False)
+        #fit = fitnessAutomata(nfaReworkFalse, df_test, sRet, sRetTest)
+        bpmn = nfa_to_bpmn(nfa, remGat)
+        gateways, tasks, flows = countBPMN(bpmn)
+        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #net = removeTransicoesInvisiveis(net)
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Não-Determinística sem retrabalho",len(nfaReworkFalse.alphabet),len(nfaReworkFalse.states),nfaReworkFalse.len_transition(),len(nfaReworkFalse.acceptStates), 0, nfaReworkFalse.len_states()])
+        acuracia.append([f"Não-Determinística sem retrabalho", fit['log_fitness']])
+    
+
+
+        dfaFalse = nfaReworkFalse.determinization()
+        #print(dfa.alphabet)
+        dfaFalse.rename()
+        #fit = fitnessAutomata(dfaFalse, df_test, sRet, sRetTest)
+        bpmn = dfa_to_bpmn(dfaFalse, remGat)
+        gateways, tasks, flows = countBPMN(bpmn)
+        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #net = removeTransicoesInvisiveis(net)
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Determinística s retrabalho",len(dfaFalse.alphabet),len(dfaFalse.states),len(dfaFalse.transition),len(dfaFalse.acceptStates), "-", "-"])
+        acuracia.append([f"Determinística s retrabalho", fit['log_fitness']])
+
+
+
+        minFalse= dfaFalse.minimization()
+        minFalse.rename()
+        #dfaToXml(minFalse, "minFalse")
+        #fit = fitnessAutomata(minFalse, df_test, sRet, sRetTest)
+        bpmn = dfa_to_bpmn(minFalse, remGat)
+        gateways, tasks, flows = countBPMN(bpmn)
+        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #net = removeTransicoesInvisiveis(net)
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Determinística min s retrabalho",len(minFalse.alphabet),len(minFalse.states),len(minFalse.transition),len(minFalse.acceptStates), "-", "-"])
+        acuracia.append([f"Determinística min s retrabalho", fit['log_fitness']])
+
+
+
+        min = dfaToNfa(minFalse)
+        nfaResultado = operacaoSequencias(min, minimo, maximo)
+        #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
+        #bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
+        #gateways, tasks, flows = countBPMN(bpmn)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min sem retrabalho",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states()])
+        #resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min sem retrabalho", gateways, tasks, flows, gateways+tasks])
+    
+
+      #Sem caminhos repetidos
+      if join:
+        nfaJoin = to_nfa_minimum_path_join_traces(event_logFreq)
+        #fit = fitnessAutomata(nfaJoin, df_test, sRet, sRetTest)
+        bpmn = nfa_to_bpmn(nfaJoin, remGat)
+        gateways, tasks, flows = countBPMN(bpmn)
+        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #net = removeTransicoesInvisiveis(net)
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Não-Determinística join",len(nfaJoin.alphabet),len(nfaJoin.states),nfaJoin.len_transition(),len(nfaJoin.acceptStates), 0, "-"])
+        acuracia.append([f"Não-Determinística join", fit['log_fitness']])
+    
+
+
+        dfaJoin = nfaJoin.determinization()
+        dfaJoin.rename()
+        #fit = fitnessAutomata(dfaJoin, df_test, sRet, sRetTest)
+        bpmn = dfa_to_bpmn(dfaJoin, remGat)
+        gateways, tasks, flows = countBPMN(bpmn)
+        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #net = removeTransicoesInvisiveis(net)
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Determinística join",len(nfaJoin.alphabet),len(nfaJoin.states),len(nfaJoin.transition),len(nfaJoin.acceptStates), "-" , "-"])
+        acuracia.append([f"Determinística join", fit['log_fitness']])
+    
+
+        minJoin= dfaJoin.minimization()
+        minJoin.rename()
+        #dfaToXml(minJoin, "minJoin")
+        #fit = fitnessAutomata(minJoin, df_test, sRet, sRetTest)
+        bpmn = dfa_to_bpmn(minJoin, remGat)
+        gateways, tasks, flows = countBPMN(bpmn)
+        net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #net = removeTransicoesInvisiveis(net)
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        #simp = simplicity_evaluator.apply(net)
+        resultados.append([f"Determinística min join",len(minJoin.alphabet),len(minJoin.states),len(minJoin.transition),len(minJoin.acceptStates), "-", "-"])
+        acuracia.append([f"Determinística min join", fit['log_fitness']])
+
+
+
+        min = dfaToNfa(minJoin)
+        nfaResultado = operacaoSequencias(min, minimo, maximo)
+        #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
+        #bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
+        #gateways, tasks, flows = countBPMN(bpmn)
+        #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+        #fit = pm4py.fitness_alignments(df_test, net, im, fm)
+        resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min join",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states()])
+        #resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min join", gateways, tasks, flows, gateways+tasks])
+
+    
+        if sRet:
+          nfaJoinFalse = to_nfa_minimum_path_join_traces(event_logFreq, rework=False)
+          #fit = fitnessAutomata(nfaJoinFalse, df_test, sRet, sRetTest)
+          bpmn = nfa_to_bpmn(nfaJoinFalse, remGat)
+          gateways, tasks, flows = countBPMN(bpmn)
+          net, im, fm = pm4py.convert_to_petri_net(bpmn)
+          #net = removeTransicoesInvisiveis(net)
+          fit = pm4py.fitness_alignments(df_test, net, im, fm)
+          #simp = simplicity_evaluator.apply(net)
+          resultados.append([f"Não-Determinística sem retrabalho join",len(nfaJoinFalse.alphabet),len(nfaJoinFalse.states),nfaJoinFalse.len_transition(),len(nfaJoinFalse.acceptStates), 0,"-"])
+          acuracia.append([f"Não-Determinística sem retrabalho join", fit['log_fitness']])
+    
+
+          dfaJoinFalse = nfaJoinFalse.determinization()
+          dfaJoinFalse.rename()
+          #fit = fitnessAutomata(dfaJoinFalse, df_test, sRet, sRetTest)
+          bpmn = dfa_to_bpmn(dfaJoinFalse, remGat)
+          gateways, tasks, flows = countBPMN(bpmn)
+          net, im, fm = pm4py.convert_to_petri_net(bpmn)
+          #net = removeTransicoesInvisiveis(net)
+          fit = pm4py.fitness_alignments(df_test, net, im, fm)
+          #simp = simplicity_evaluator.apply(net)
+          resultados.append([f"Determinística sem retrabalho join",len(dfaJoinFalse.alphabet),len(dfaJoinFalse.states),len(dfaJoinFalse.transition),len(dfaJoinFalse.acceptStates), "-", "-"])
+          acuracia.append([f"Determinística sem retrabalho join", fit['log_fitness']])
+    
+
+
+          minJoinFalse= dfaJoinFalse.minimization()
+          minJoinFalse.rename()
+          #dfaToXml(minJoinFalse, "minJoinFalse")
+          #fit = fitnessAutomata(minJoinFalse, df_test, sRet, sRetTest)
+          bpmn = dfa_to_bpmn(minJoinFalse, remGat)
+          gateways, tasks, flows = countBPMN(bpmn)
+          net, im, fm = pm4py.convert_to_petri_net(bpmn)
+          #net = removeTransicoesInvisiveis(net)
+          fit = pm4py.fitness_alignments(df_test, net, im, fm)
+          #simp = simplicity_evaluator.apply(net)
+          resultados.append([f"Determinística min sem retrabalho join",len(minJoinFalse.alphabet),len(minJoinFalse.states),len(minJoinFalse.transition),len(minJoinFalse.acceptStates), "-", "-"])
+          acuracia.append([f"Determinística min sem retrabalho join", fit['log_fitness']])
+
+
+
+          min = dfaToNfa(minJoinFalse)
+          nfaResultado = operacaoSequencias(min, minimo, maximo)
+          #fit = fitnessAutomata(nfaResultado, df_test, sRet, sRetTest)
+          #bpmn = nfaBB_to_bpmn(nfaResultado, remGat)
+          #gateways, tasks, flows = countBPMN(bpmn)
+          #net, im, fm = pm4py.convert_to_petri_net(bpmn)
+          #fit = pm4py.fitness_alignments(df_test, net, im, fm)
+          resultados.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min sem retrabalho join",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states()])
+          #resultadosBPMN.append([f"Operação Sequencias min/max:{minimo}-{maximo} estados DFA min sem retrabalho join", gateways, tasks, flows, gateways+tasks])
+    
 
 
 
@@ -2267,6 +2412,130 @@ def tabTraces(lista):
   display(tabs)
   with outFreqTraces:
     display(pd.DataFrame(tracesFreq,columns=["Trace","Frequência"]))
+
+
+
+def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_csv, test_csv, df_test, list_test, tokenbased=True, camMin=True, sRet=True, join=True):
+  comparacaoPetri = []
+  comparacaoPetri.append([f"Alpha miner", len(netAlpha.places), len(netAlpha.transitions), len(netAlpha.arcs), len(netAlpha.places) + len(netAlpha.transitions), fitAlpha])
+
+  comparacaoPetri.append([f"Heuristic miner", len(netHeu.places), len(netHeu.transitions), len(netHeu.arcs), len(netHeu.places) + len(netHeu.transitions), fitHeu])
+
+  comparacaoPetri.append([f"Inductive miner", len(netInd.places), len(netInd.transitions), len(netInd.arcs), len(netInd.places) + len(netInd.transitions), fitInd])
+
+  if join:
+    if sRet:
+      nfaJoinFalse = to_nfa_minimum_path_join_traces(train_csv, rework=False)
+
+
+      dfaJoinFalse = nfaJoinFalse.determinization()
+
+
+
+      minJoinFalse= dfaJoinFalse.minimization()
+      minJoinFalse.rename()
+
+
+
+      #min = dfaToNfa(minJoinFalse)
+      bpmnMin = dfa(minJoinFalse)
+      net, im, fm = pm4py.convert_to_petri_net(bpmnMin)
+      if tokenbased:
+        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+      else:
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+      comparacaoPetri.append(["DFA min sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
+    else:
+      nfaJoin = to_nfa_minimum_path_join_traces(train_csv, rework=True)
+
+
+      dfaJoin = nfaJoin.determinization()
+
+
+
+      minJoin= dfaJoin.minimization()
+      minJoin.rename()
+
+
+
+      #min = dfaToNfa(minJoinFalse)
+      bpmnMin = dfa(minJoin)
+      net, im, fm = pm4py.convert_to_petri_net(bpmnMin)
+      if tokenbased:
+        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+      else:
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+      comparacaoPetri.append(["DFA min retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
+
+  elif camMin:
+    if sRet:
+      nfaCamMin = to_nfa_minimum_path(train_csv, rework=False, nfa_bb=False)
+
+
+    
+      dfa = nfaCamMin.determinization()
+
+
+
+      min = dfa.minimization()
+
+
+
+      #min = dfaToNfa(minJoinFalse)
+      bpmnMin = dfa(min)
+      net, im, fm = pm4py.convert_to_petri_net(bpmnMin)
+      if tokenbased:
+        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+      else:
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+      comparacaoPetri.append(["DFA min sem retrabalho cam min", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
+
+    else:
+      nfaCamMin = to_nfa_minimum_path(train_csv, nfa_bb=False)
+
+
+
+      dfa = nfaCamMin.determinization()
+
+
+
+      min = dfa.minimization()
+
+
+
+      #min = dfaToNfa(minJoinFalse)
+      bpmnMin = dfa(min)
+      net, im, fm = pm4py.convert_to_petri_net(bpmnMin)
+      if tokenbased:
+        fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+      else:
+        fit = pm4py.fitness_alignments(df_test, net, im, fm)
+      comparacaoPetri.append(["DFA min retrabalho cam min", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
+
+
+  else:
+    nfa = to_nfa(train_csv)
+
+
+
+    dfa = nfa.determinization()
+
+
+
+    min = dfa.minimization()
+
+
+
+    #min = dfaToNfa(minJoinFalse)
+    bpmnMin = dfa(min)
+    net, im, fm = pm4py.convert_to_petri_net(bpmnMin)
+    if tokenbased:
+      fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
+    else:
+      fit = pm4py.fitness_alignments(df_test, net, im, fm)
+    comparacaoPetri.append(["DFA min sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
+
+  return comparacaoPetri
 
 
 
