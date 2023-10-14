@@ -2438,7 +2438,7 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
 
 
       #min = dfaToNfa(minJoinFalse)
-      bpmnMin = dfa(minJoinFalse)
+      bpmnMin = dfa_to_bpmn(minJoinFalse)
       net, im, fm = pm4py.convert_to_petri_net(bpmnMin)
       if tokenbased:
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
@@ -2459,7 +2459,7 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
 
 
       #min = dfaToNfa(minJoinFalse)
-      bpmnMin = dfa(minJoin)
+      bpmnMin = dfa_to_bpmn(minJoin)
       net, im, fm = pm4py.convert_to_petri_net(bpmnMin)
       if tokenbased:
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
@@ -2482,7 +2482,7 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
 
 
       #min = dfaToNfa(minJoinFalse)
-      bpmnMin = dfa(min)
+      bpmnMin = dfa_to_bpmn(min)
       net, im, fm = pm4py.convert_to_petri_net(bpmnMin)
       if tokenbased:
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
@@ -2504,7 +2504,7 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
 
 
       #min = dfaToNfa(minJoinFalse)
-      bpmnMin = dfa(min)
+      bpmnMin = dfa_to_bpmn(min)
       net, im, fm = pm4py.convert_to_petri_net(bpmnMin)
       if tokenbased:
         fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
@@ -2527,7 +2527,7 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
 
 
     #min = dfaToNfa(minJoinFalse)
-    bpmnMin = dfa(min)
+    bpmnMin = dfa_to_bpmn(min)
     net, im, fm = pm4py.convert_to_petri_net(bpmnMin)
     if tokenbased:
       fit = pm4py.fitness_token_based_replay(df_test, net, im, fm)
