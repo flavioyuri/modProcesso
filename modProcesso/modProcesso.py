@@ -172,17 +172,19 @@ def ts_to_nfa(ts):
   chegam = {}
   saem = {}
   for s in ts.states:
-    Q.add(s.label)
+    print('s', str(s))
+    print("s.label", s.label)
+    Q.add(s)
     if len(s.incoming) > 0:
       for t in s.incoming:
-        chegam.setdefault(t, set()).add(s.label)
+        chegam.setdefault(t, set()).add(s)
     if len(s.outgoing) > 0:
       for t in s.outgoing:
         saem.setdefault(s, set()).add(t)
     if s.label == "source1":
-      q0 = s.label
+      q0 = s
     if s.label == "sink1":
-      F.add(s.label)
+      F.add(s)
 
   for s in saem.keys():
     transicoes = saem.setdefault(s)
@@ -194,11 +196,11 @@ def ts_to_nfa(ts):
         aux = chegam.setdefault(transicao)
         for destino in aux:
           Sigma.add(x[1])
-          delta.setdefault((s.label, x[1]), set()).add(destino)
+          delta.setdefault((s, x[1]), set()).add(destino)
       else:
         aux = chegam.setdefault(transicao)
         for destino in aux:
-          delta.setdefault((s.label, ''), set()).add(destino)
+          delta.setdefault((s, ''), set()).add(destino)
 
 
 
