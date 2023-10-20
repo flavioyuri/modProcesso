@@ -160,6 +160,57 @@ class NFA_BB_Filha(NFA_BB):
     self.saidas, self.chegadas, self.umaSaida, self.destinoVarios = NFA_BB_Filha.propTransicoes(Q, delta)
 
 
+
+
+def ts_to_nfa(ts):
+  Q = set()
+  Sigma = set()
+  q0 = ''
+  delta = {}
+  F = set()
+
+  chegam = {}
+  saem = {}
+  for s in ts.states:
+    Q.add(s.label)
+    if len(s.incoming) > 0:
+      for t in s.incoming:
+        chegam.setdefault(t, set()).add(s.label)
+    if len(s.outgoing) > 0:
+      for t in s.outgoing:
+        saem.setdefault(s, set()).add(t)
+    if s.label == "source1":
+      q0 = s.label
+    if s.label == "sink1":
+      F.add(s.label)
+
+  for s in saem.keys():
+    transicoes = saem.setdefault(s)
+    for transicao in transicoes:
+      x = transicao.name.split()
+      x = x[1].split(')')
+      if x[0] != 'None':
+        x = x[0].split("'")
+        aux = chegam.setdefault(transicao)
+        for destino in aux:
+          Sigma.add(x[1])
+          delta.setdefault((s.label, x[1]), set()).add(destino)
+      else:
+        aux = chegam.setdefault(transicao)
+        for destino in aux:
+          delta.setdefault((s.label, ''), set()).add(destino)
+
+
+
+
+
+  nfa = NFA_E(Q,Sigma,q0,delta,F)
+  return nfa
+
+
+
+
+
 def removeTransicoesInvisiveis(net):
   entradas = {}
   saidas = {}
@@ -2536,6 +2587,134 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
     comparacaoPetri.append(["DFA min sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
 
   return comparacaoPetri
+
+
+def comparacaoAut(autAlpha, autHeu, autInd, fitAlpha, fitHeu, fitInd, train_csv, test_csv, df_test, list_test, camMin=True, sRet=True, join=True):
+  comparacaoPetri = []
+  comparacaoPetri.append([f"Alpha miner", len(autAlpha.states), len(autAlpha.alphabet), autAlpha.len_transition(), fitAlpha])
+
+  comparacaoPetri.append([f"Heuristic miner", len(autHeu.states), len(autHeu.alphabet), autHeu.len_transition(), fitHeu])
+
+  comparacaoPetri.append([f"Inductive miner", len(autInd.states), len(autInd.alphabet), autInd.len_transition(), fitInd])
+
+  if join:
+    if sRet:
+      nfaJoinFalse = to_nfa_minimum_path_join_traces(train_csv, rework=False)
+
+
+      dfaJoinFalse = nfaJoinFalse.determinization()
+
+
+
+      minJoinFalse= dfaJoinFalse.minimization()
+      minJoinFalse.rename()
+
+
+
+      fit = fitnessAutomata(minJoinFalse, df_test)
+
+      comparacaoPetri.append(["DFA min sem retrabalho join", len(minJoinFalse.states), len(minJoinFalse.alphabet), minJoinFalse.len_transition(), fit])
+    else:
+      nfaJoin = to_nfa_minimum_path_join_traces(train_csv, rework=True)
+
+
+      dfaJoin = nfaJoin.determinization()
+
+
+
+      minJoin= dfaJoin.minimization()
+      minJoin.rename()
+
+
+
+
+
+
+      fit = fitnessAutomata(minJoin, df_test)
+
+      comparacaoPetri.append(["DFA min join", len(minJoin.states), len(minJoin.alphabet), minJoin.len_transition(), fit])
+
+  elif camMin:
+    if sRet:
+      nfaCamMin = to_nfa_minimum_path(train_csv, rework=False, nfa_bb=False)
+
+
+
+      dfa = nfaCamMin.determinization()
+
+
+
+      min = dfa.minimization()
+
+
+
+
+
+
+      fit = fitnessAutomata(min, df_test)
+
+      comparacaoPetri.append(["DFA min sem retrabalho cam min", len(min.states), len(min.alphabet), min.len_transition(), fit])
+    else:
+      nfaCamMin = to_nfa_minimum_path(train_csv, nfa_bb=False)
+
+
+
+      dfa = nfaCamMin.determinization()
+
+
+
+      min = dfa.minimization()
+
+
+
+
+
+
+      fit = fitnessAutomata(min, df_test)
+
+      comparacaoPetri.append(["DFA min retrabalho cam min", len(min.states), len(min.alphabet), min.len_transition(), fit])
+
+
+  else:
+    nfa = to_nfa(train_csv)
+
+
+
+    dfa = nfa.determinization()
+
+
+
+    min = dfa.minimization()
+
+
+
+    fit = fitnessAutomata(min, df_test)
+
+    comparacaoPetri.append(["DFA min sem retrabalho cam min", len(min.states), len(min.alphabet), min.len_transition(), fit])
+
+  return comparacaoPetri
+
+
+def mostrarTabAut(train_csv, tabela):
+    outBPMN = widgets.Output()
+    tabsBPMN = widgets.Tab(children=[outBPMN])
+    tabsBPMN.set_title(0, 'Comparação')
+    display(tabsBPMN)
+    with outBPMN:
+      text = "Tam log: " + str(len(train_csv))
+      sum = 0
+      for x in train_csv:
+        sum+=len(x)
+      textSum = "N° eventos: " + str(sum)
+
+
+      display(text)
+
+
+      display(textSum)
+
+      display(pd.DataFrame(tabela,columns=["Modelo:", "Estados","Alfabeto","Transições", "Acurácia"]))
+
 
 
 def mostrarTabPetri(train_csv, tabela):
