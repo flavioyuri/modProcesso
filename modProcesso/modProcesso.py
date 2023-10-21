@@ -1306,7 +1306,7 @@ def tabelamentoPorFrequencia(event_log, df, p, list_test, df_test, minimo=3, max
       #nfaResultado = operacaoSequencias(min, minimo, maximo)
       #fit = fitnessAutomata(nfaResultado, list_test, True, True)
       print([f"{p*100}% mais frequentes",len(minJoinFalse.alphabet),len(minJoinFalse.states),len(minJoinFalse.transition),len(minJoinFalse.acceptStates), len(minJoinFalse.NFAs), minJoinFalse.len_states(), tkb['perc_fit_traces'], simp])
-      resultados.append([f"{p*100}% mais frequentes",len(minJoinFalse.alphabet),len(minJoinFalse.states),len(minJoinFalse.transition),len(minJoinFalse.acceptStates), len(minJoinFalse.NFAs), minJoinFalse.len_states(), tkb['perc_fit_traces'], simp])
+      resultados.append([f"{p*100}% mais frequentes",len(minJoinFalse.alphabet),len(minJoinFalse.states),len(minJoinFalse.transition),len(minJoinFalse.acceptStates), tkb['perc_fit_traces'], simp])
       p = p+0.05
     return resultados
 
@@ -1333,7 +1333,7 @@ def mostraTabFreq(event_log, resultados):
     display(text)
 
     display(textSum)
-    result = pd.DataFrame(resultados,columns=["Frequência","Atividades","Estados","Transições","Estados de Aceitação", "Sub-Automatos", "Estados + Estados sub", "AcuráciaTkb", "Simplicidade"])
+    result = pd.DataFrame(resultados,columns=["Frequência","Atividades","Estados","Transições","Estados de Aceitação", "AcuráciaTkb", "Simplicidade"])
     display(result)
 
 
