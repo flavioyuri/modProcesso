@@ -172,8 +172,8 @@ def ts_to_nfa(ts):
   chegam = {}
   saem = {}
   for s in ts.states:
-    print('s', str(s))
-    print("s.label", s.label)
+    #print('s', s.label)
+    #print("s.label", s.label)
     Q.add(s)
     if len(s.incoming) > 0:
       for t in s.incoming:
@@ -181,9 +181,9 @@ def ts_to_nfa(ts):
     if len(s.outgoing) > 0:
       for t in s.outgoing:
         saem.setdefault(s, set()).add(t)
-    if s.label == "source1":
+    if str(s) == "source1":
       q0 = s
-    if s.label == "sink1":
+    if str(s) == "sink1":
       F.add(s)
 
   for s in saem.keys():
