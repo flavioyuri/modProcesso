@@ -1286,27 +1286,27 @@ def tabelamentoPorFrequencia(event_log, df, p, list_test, df_test, minimo=3, max
       minJoinFalse.rename()
       bpmn = dfa_to_bpmn(minJoinFalse, True)
       net, im, fm = pm4py.convert_to_petri_net(bpmn)
-      pm4py.fitness_alignments()
-      alignments = pm4py.fitness_alignments(df_test, net, im, fm)
-      net = removeTransicoesInvisiveis2(net)
+      #pm4py.fitness_alignments()
+      #alignments = pm4py.fitness_alignments(df_test, net, im, fm)
+      #net = removeTransicoesInvisiveis2(net)
       tkb = pm4py.fitness_token_based_replay(df_test, net, im, fm)
       #print("fm", fm)
-      replayed_traces = tk.apply(df_test, net, im, fm)
-      aceita = 0
-      for i in replayed_traces:
-        for f in fm:
-          if f in i['reached_marking']:
-            aceita = aceita+1
-            break
+      #replayed_traces = tk.apply(df_test, net, im, fm)
+      #aceita = 0
+      #for i in replayed_traces:
+      #  for f in fm:
+      #    if f in i['reached_marking']:
+      #      aceita = aceita+1
+      #      break
 
-      Cases = len(df_test["Case ID"].unique())
-      fitAut = (aceita/Cases) * 100
+      #Cases = len(df_test["Case ID"].unique())
+      #fitAut = (aceita/Cases) * 100
       simp = simplicity_evaluator.apply(net)
-      min = dfaToNfa(minJoinFalse)
-      nfaResultado = operacaoSequencias(min, minimo, maximo)
-      fit = fitnessAutomata(nfaResultado, list_test, True, True)
-      print([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['perc_fit_traces'], alignments['percFitTraces'], simp])
-      resultados.append([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['perc_fit_traces'], fitAut, alignments['percFitTraces'], simp])
+      #min = dfaToNfa(minJoinFalse)
+      #nfaResultado = operacaoSequencias(min, minimo, maximo)
+      #fit = fitnessAutomata(nfaResultado, list_test, True, True)
+      print([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), tkb['perc_fit_traces'], simp])
+      resultados.append([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), tkb['perc_fit_traces'], simp])
       p = p+0.05
     return resultados
 
