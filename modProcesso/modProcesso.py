@@ -1260,14 +1260,14 @@ def tabelamentoPorFrequencia(event_log, df, p, list_test, df_test, minimo=3, max
     minJoinFalse.rename()
     bpmn = dfa_to_bpmn(minJoinFalse, True)
     net, im, fm = pm4py.convert_to_petri_net(bpmn)
-    net = removeTransicoesInvisiveis(net)
-    alignments = pm4py.fitness_alignments(df_test, net, im, fm)
+    #net = removeTransicoesInvisiveis(net)
+    #alignments = pm4py.fitness_alignments(df_test, net, im, fm)
     tkb = pm4py.fitness_token_based_replay(df_test, net, im, fm)
     simp = simplicity_evaluator.apply(net)
-    min = dfaToNfa(minJoinFalse)
-    nfaResultado = operacaoSequencias(min, minimo, maximo)
-    fit = fitnessAutomata(nfaResultado, list_test, True, True)
-    print([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['perc_fit_traces'], alignments['percFitTraces'], simp])
+    #min = dfaToNfa(minJoinFalse)
+    #nfaResultado = operacaoSequencias(min, minimo, maximo)
+    #fit = fitnessAutomata(nfaResultado, list_test, True, True)
+    print([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), tkb['perc_fit_traces'], simp])
     #resultados.append([f"{p*100}% mais frequentes",len(nfaResultado.alphabet),len(nfaResultado.states),len(nfaResultado.transition),len(nfaResultado.acceptStates), len(nfaResultado.NFAs), nfaResultado.len_states(), fit, tkb['perc_fit_traces'], alignments['percFitTraces'], simp])
     return resultados
   else:
@@ -1333,7 +1333,7 @@ def mostraTabFreq(event_log, resultados):
     display(text)
 
     display(textSum)
-    result = pd.DataFrame(resultados,columns=["Frequência","Atividades","Estados","Transições","Estados de Aceitação", "Sub-Automatos", "Estados + Estados sub", "AcuráciaAut", "AcuráciaTkb", "AcuraciaTkbAutomato", "AcuráciaAlignments", "Simplicidade"])
+    result = pd.DataFrame(resultados,columns=["Frequência","Atividades","Estados","Transições","Estados de Aceitação", "Sub-Automatos", "Estados + Estados sub", "AcuráciaTkb", "Simplicidade"])
     display(result)
 
 
