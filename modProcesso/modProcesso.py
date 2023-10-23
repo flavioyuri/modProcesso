@@ -2613,7 +2613,7 @@ def comparacaoAut(autAlpha, autHeu, autInd, fitAlpha, fitHeu, fitInd, train_csv,
 
 
 
-      fit = fitnessAutomata(minJoinFalse, df_test)
+      fit = fitnessAutomata(minJoinFalse, list_test)
 
       comparacaoPetri.append(["DFA min sem retrabalho join", len(minJoinFalse.states), len(minJoinFalse.alphabet), minJoinFalse.len_transition(), fit])
     else:
@@ -2632,7 +2632,7 @@ def comparacaoAut(autAlpha, autHeu, autInd, fitAlpha, fitHeu, fitInd, train_csv,
 
 
 
-      fit = fitnessAutomata(minJoin, df_test)
+      fit = fitnessAutomata(minJoin, list_test)
 
       comparacaoPetri.append(["DFA min join", len(minJoin.states), len(minJoin.alphabet), minJoin.len_transition(), fit])
 
@@ -2653,7 +2653,7 @@ def comparacaoAut(autAlpha, autHeu, autInd, fitAlpha, fitHeu, fitInd, train_csv,
 
 
 
-      fit = fitnessAutomata(min, df_test)
+      fit = fitnessAutomata(min, list_test)
 
       comparacaoPetri.append(["DFA min sem retrabalho cam min", len(min.states), len(min.alphabet), min.len_transition(), fit])
     else:
@@ -2672,7 +2672,7 @@ def comparacaoAut(autAlpha, autHeu, autInd, fitAlpha, fitHeu, fitInd, train_csv,
 
 
 
-      fit = fitnessAutomata(min, df_test)
+      fit = fitnessAutomata(min, list_test)
 
       comparacaoPetri.append(["DFA min retrabalho cam min", len(min.states), len(min.alphabet), min.len_transition(), fit])
 
@@ -2690,7 +2690,7 @@ def comparacaoAut(autAlpha, autHeu, autInd, fitAlpha, fitHeu, fitInd, train_csv,
 
 
 
-    fit = fitnessAutomata(min, df_test)
+    fit = fitnessAutomata(min, list_test)
 
     comparacaoPetri.append(["DFA min sem retrabalho cam min", len(min.states), len(min.alphabet), min.len_transition(), fit])
 
