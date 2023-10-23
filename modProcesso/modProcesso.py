@@ -175,7 +175,7 @@ def ts_to_nfa(ts):
   estados = {}
   i = 0
   for s in ts.states:
-    estados.setdefault(i, 's'+str(i))
+    estados.setdefault(s, 's'+str(i))
     i = i+1
 
   for s in ts.states:
