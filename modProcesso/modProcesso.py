@@ -196,12 +196,17 @@ def ts_to_nfa(ts):
   for s in saem.keys():
     transicoes = saem.setdefault(s)
     for transicao in transicoes:
-      x = transicao.name.split()
+      #print("transicao", transicao.name)
+      x = transicao.name.split(", ")
+      #print("x - 0", x)
       x = x[1].split(')')
+      #print("x - 1", x)
       if x[0] != 'None':
         x = x[0].split("'")
+        #print("x - 2", x)
         aux = chegam.setdefault(transicao)
         for destino in aux:
+          #print("SIGMA", x, x[1])
           Sigma.add(x[1])
           delta.setdefault((estados.setdefault(s), x[1]), set()).add(estados.setdefault(destino))
       else:
@@ -212,7 +217,8 @@ def ts_to_nfa(ts):
 
 
 
-
+  #print(Q)
+  #print(Sigma)
   nfa = NFA_E(Q,Sigma,q0,delta,F)
   return nfa
 
