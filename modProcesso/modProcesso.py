@@ -171,10 +171,17 @@ def ts_to_nfa(ts):
 
   chegam = {}
   saem = {}
+
+  estados = {}
+  i = 0
+  for s in ts.states:
+    estados.setdefault(i, 's'+str(i))
+    i = i+1
+
   for s in ts.states:
     #print('s', s.label)
     #print("s.label", s.label)
-    Q.add(s)
+    Q.add(estados.setdefault(s))
     if len(s.incoming) > 0:
       for t in s.incoming:
         chegam.setdefault(t, set()).add(s)
@@ -182,9 +189,9 @@ def ts_to_nfa(ts):
       for t in s.outgoing:
         saem.setdefault(s, set()).add(t)
     if str(s) == "source1":
-      q0 = s
+      q0 = estados.setdefault(s)
     if str(s) == "sink1":
-      F.add(s)
+      F.add(estados.setdefault(s))
 
   for s in saem.keys():
     transicoes = saem.setdefault(s)
@@ -196,11 +203,11 @@ def ts_to_nfa(ts):
         aux = chegam.setdefault(transicao)
         for destino in aux:
           Sigma.add(x[1])
-          delta.setdefault((s, x[1]), set()).add(destino)
+          delta.setdefault((estados.setdefault(s), x[1]), set()).add(estados.setdefault(destino))
       else:
         aux = chegam.setdefault(transicao)
         for destino in aux:
-          delta.setdefault((s, ''), set()).add(destino)
+          delta.setdefault((estados.setdefault(s), ''), set()).add(estados.setdefault(destino))
 
 
 
@@ -2885,4 +2892,3 @@ def caracteristicasLogs(event_log, lLog, activity, caseId, x=30, tabela=True, re
     else:
       event_freq2.groupby("Trace").sum().sort_values(by="Frequencia")[-x:].plot.bar()
       plt.show()
-
