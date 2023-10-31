@@ -1683,7 +1683,7 @@ def tabelamento(event_log, df_test, list_test, minimo=3, maximo=25, sRetTest = T
 
     logSRet = []
     for j in range(len(list_test)):
-      trace, trace_new_transitions = removeAllSequencesOfRepetitions(list_test2[j])
+      trace, trace_new_transitions = removeAllSequencesOfRepetitions(list_test[j])
       logSRet.append(trace)
 
 
