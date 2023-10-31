@@ -1691,16 +1691,16 @@ def tabelamento(event_log, df_test, list_test, minimo=3, maximo=25, sRetTest = T
     time = []
     caso = 0
     activities = []
-    for i in lLog:
+    for i in logSRet:
       for j in i:
         activities.append(j)
         cases.append(str(caso))
         time.append(datetime.datetime.now())
       caso = caso+1
 
-    print(len(lLog))
-    print(len(cases))
-    print(len(time))
+    #print(len(lLog))
+    #print(len(cases))
+    #print(len(time))
 
     data = {"Activity" : activities, "Case_ID" : cases, 'Timestamp':time}
     df_SRet = pd.DataFrame(data=data)
