@@ -2558,9 +2558,9 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
       bpmnMin = dfa_to_bpmn(minJoinFalse)
       net, im, fm = pm4py.convert_to_petri_net(bpmnMin)
       if tokenbased:
-        fit = pm4py.fitness_token_based_replay(df_SRet, net, im, fm)
+        fit = pm4py.fitness_token_based_replay(df_SRet, net, im, fm, case_id_key ='Case_ID', activity_key='Activity', timestamp_key='Timestamp')
       else:
-        fit = pm4py.fitness_alignments(df_SRet, net, im, fm)
+        fit = pm4py.fitness_alignments(df_SRet, net, im, fm, case_id_key ='Case_ID', activity_key='Activity', timestamp_key='Timestamp')
       comparacaoPetri.append(["DFA min sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
     else:
       nfaJoin = to_nfa_minimum_path_join_traces(train_csv, rework=True)
@@ -2602,9 +2602,9 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
       bpmnMin = dfa_to_bpmn(min)
       net, im, fm = pm4py.convert_to_petri_net(bpmnMin)
       if tokenbased:
-        fit = pm4py.fitness_token_based_replay(df_SRet, net, im, fm)
+        fit = pm4py.fitness_token_based_replay(df_SRet, net, im, fm, case_id_key ='Case_ID', activity_key='Activity', timestamp_key='Timestamp')
       else:
-        fit = pm4py.fitness_alignments(df_SRet, net, im, fm)
+        fit = pm4py.fitness_alignments(df_SRet, net, im, fm, case_id_key ='Case_ID', activity_key='Activity', timestamp_key='Timestamp')
       comparacaoPetri.append(["DFA min sem retrabalho cam min", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
 
     else:
@@ -2647,9 +2647,9 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
     bpmnMin = dfa_to_bpmn(min)
     net, im, fm = pm4py.convert_to_petri_net(bpmnMin)
     if tokenbased:
-      fit = pm4py.fitness_token_based_replay(df_SRet, net, im, fm)
+      fit = pm4py.fitness_token_based_replay(df_SRet, net, im, fm, case_id_key ='Case_ID', activity_key='Activity', timestamp_key='Timestamp')
     else:
-      fit = pm4py.fitness_alignments(df_SRet, net, im, fm)
+      fit = pm4py.fitness_alignments(df_SRet, net, im, fm, case_id_key ='Case_ID', activity_key='Activity', timestamp_key='Timestamp')
     comparacaoPetri.append(["DFA min sem retrabalho join", len(net.places), len(net.transitions), len(net.arcs), len(net.places) + len(net.transitions), fit['log_fitness']])
 
   return comparacaoPetri
