@@ -2525,7 +2525,7 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
   time = []
   caso = 0
   activities = []
-  for i in lLog:
+  for i in logSRet:
     for j in i:
       activities.append(j)
       cases.append(str(caso))
