@@ -299,7 +299,6 @@ def removeTransicoesInvisiveis(net):
 
   return net
 
-
 def nfaBB_to_bpmn(nfa, remove_unnecessary_gateways=True):
   bpmn = BPMN()
   i = 1
@@ -313,10 +312,21 @@ def nfaBB_to_bpmn(nfa, remove_unnecessary_gateways=True):
   gateways_in = {}
   gateways_out = {}
   flows = {}
+  estadosTotais = set()
+
+
+  for s in nfa.states:
+    if s not in nfa.NFAs.keys():
+      estadosTotais.add(s)
+    else:
+      sub = nfa.NFAs.setdefault(s)
+      for x in sub.states:
+        estadosTotais.add(x)
+
 
 
   #Each state will be an exclusive gateway except those who are representing subprocesses
-  for s in nfa.states:
+  for s in estadosTotais:
     if s in nfa.NFAs.keys() and s not in subprocess.keys():
       subprocess[s] = BPMN.SubProcess(id=s, name=s)
       subprocess[s].set_process(nfa.label)
@@ -496,7 +506,7 @@ def nfaBB_to_bpmn(nfa, remove_unnecessary_gateways=True):
 
 
   if remove_unnecessary_gateways:
-    for s in nfa.states:
+    for s in estadosTotais:
       if(s in gateways and len(gateways_in[s])==1 and len(gateways_out[s])==1):
         s_in = gateways_in[s][0]
         s_out = gateways_out[s][0]
@@ -512,6 +522,7 @@ def nfaBB_to_bpmn(nfa, remove_unnecessary_gateways=True):
 
 
   return bpmn
+
 
 
 
