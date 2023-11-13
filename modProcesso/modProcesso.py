@@ -316,9 +316,8 @@ def nfaBB_to_bpmn(nfa, remove_unnecessary_gateways=True):
 
 
   for s in nfa.states:
-    if s not in nfa.NFAs.keys():
-      estadosTotais.add(s)
-    else:
+    estadosTotais.add(s)
+    if s in nfa.NFAs.keys():
       sub = nfa.NFAs.setdefault(s)
       for x in sub.states:
         estadosTotais.add(x)
@@ -378,6 +377,7 @@ def nfaBB_to_bpmn(nfa, remove_unnecessary_gateways=True):
     start_event_sub = BPMN.StartEvent(name="i_"+str(i), isInterrupting=True)
     i = i+1
     for s in sub.states:
+      print(s)
       if s in sub.NFAs.keys() and s not in subprocessSub.keys():
         subprocessSub[s] = BPMN.SubProcess(id=s, name=s)
         subprocessSub[s].set_process(sub.label)
@@ -396,24 +396,31 @@ def nfaBB_to_bpmn(nfa, remove_unnecessary_gateways=True):
           if remove_unnecessary_gateways:
             gateways_inSub[gatewaysSub[s_aux]].append(gatewaysSub[s])
             gateways_outSub[gatewaysSub[s]].append(gatewaysSub[s_aux])
-            flows[gatewaysSub[s], gatewaysSub[s_aux]] = flow
+            flowsSub[gatewaysSub[s], gatewaysSub[s_aux]] = flow
         elif s!=s_aux and s in subprocess and s_aux in gatewaysSub:
           flow = BPMN.SequenceFlow(subprocessSub[s], gatewaysSub[s_aux])
           bpmn.add_flow(flow)
           if remove_unnecessary_gateways:
             gateways_inSub[gatewaysSub[s_aux]].append(subprocessSub[s])
             gateways_outSub[subprocessSub[s]].append(gatewaysSub[s_aux])
-            flows[subprocessSub[s], gatewaysSub[s_aux]] = flow
+            flowsSub[subprocessSub[s], gatewaysSub[s_aux]] = flow
         elif s!=s_aux and s in gatewaysSub and s_aux in subprocessSub:
           flow = BPMN.SequenceFlow(gatewaysSub[s], subprocessSub[s_aux])
           bpmn.add_flow(flow)
           if remove_unnecessary_gateways:
             gateways_inSub[subprocessSub[s_aux]].append(gatewaysSub[s])
             gateways_outSub[gatewaysSub[s]].append(subprocessSub[s_aux])
-            flows[gatewaysSub[s], subprocessSub[s_aux]] = flow
+            flowsSub[gatewaysSub[s], subprocessSub[s_aux]] = flow
         elif s!=s_aux and s in subprocessSub and s_aux in subprocessSub:
           flow = BPMN.SequenceFlow(subprocessSub[s], subprocessSub[s_aux])
           bpmn.add_flow(flow)
+    
+    flow = BPMN.SequenceFlow(start_event_sub, gatewaysSub[sub.startState])
+    bpmn.add_flow(flow)
+
+    if remove_unnecessary_gateways:
+      gateways_inSub[sub.startState].append(start_event_sub)
+      flowsSub[start_event_sub, gatewaysSub[sub.startState]] = flow
 
     for s in sub.acceptStates:
       end_eventsSub[s] = BPMN.EndEvent(name='e_'+s)
@@ -431,13 +438,13 @@ def nfaBB_to_bpmn(nfa, remove_unnecessary_gateways=True):
           bpmn.add_flow(flow)
           if remove_unnecessary_gateways:
             gateways_outSub[s].append(task)
-            flows[gatewaysSub[s], task] = flow
+            flowsSub[gatewaysSub[s], task] = flow
         elif s in subprocessSub:
           flow = BPMN.SequenceFlow(subprocessSub[s], task)
           bpmn.add_flow(flow)
           if remove_unnecessary_gateways:
             gateways_outSub[s].append(task)
-            flows[subprocessSub[s], task] = flow
+            flowsSub[subprocessSub[s], task] = flow
         for n_s in sub.transition[s,a]:
           if n_s in gatewaysSub:
             flow = BPMN.SequenceFlow(task, gatewaysSub[n_s])
@@ -451,8 +458,28 @@ def nfaBB_to_bpmn(nfa, remove_unnecessary_gateways=True):
             elif n_s in subprocessSub:
               gateways_inSub[subprocessSub[n_s]].append(task)
               flowsSub[task, subprocessSub[n_s]] = flow
-    flow = BPMN.SequenceFlow(start_event_sub, gatewaysSub[sub.startState])
-    bpmn.add_flow(flow)
+
+    if remove_unnecessary_gateways:
+      for s in sub.states:
+        if(s in gatewaysSub and len(gateways_inSub[s])==1 and len(gateways_outSub[s])==1):
+          s_in = gateways_inSub[s][0]
+          s_out = gateways_outSub[s][0]
+          print(s_out, gatewaysSub[s])
+          if (s_in, gatewaysSub[s]) in flowsSub:
+            bpmn.remove_flow(flowsSub[s_in, gatewaysSub[s]])
+          print(flowsSub)
+          if (gatewaysSub[s], s_out) in flowsSub:
+            print("abluble")
+            bpmn.remove_flow(flowsSub[gatewaysSub[s], s_out])
+          bpmn.add_flow(BPMN.SequenceFlow(s_in, s_out))
+          bpmn.remove_node(gatewaysSub[s])
+
+        if(s in gatewaysSub and len(gateways_inSub[s])==1 and len(gateways_outSub[s])==0):
+          s_in = gateways_inSub[s][1]
+          bpmn.remove_flow(flowsSub[s_in, gatewaysSub[s]])
+          bpmn.remove_node(gatewaysSub[s])
+
+
 
 
 
@@ -507,6 +534,8 @@ def nfaBB_to_bpmn(nfa, remove_unnecessary_gateways=True):
 
   if remove_unnecessary_gateways:
     for s in estadosTotais:
+      
+      print(s, len(gateways_in[s]), len(gateways_out[s]))
       if(s in gateways and len(gateways_in[s])==1 and len(gateways_out[s])==1):
         s_in = gateways_in[s][0]
         s_out = gateways_out[s][0]
@@ -519,7 +548,7 @@ def nfaBB_to_bpmn(nfa, remove_unnecessary_gateways=True):
         s_in = gateways_in[s][0]
         bpmn.remove_flow(flows[s_in, gateways[s]])
         bpmn.remove_node(gateways[s])
-
+      
 
   return bpmn
 
@@ -2549,7 +2578,7 @@ def comparacaoPetri(netAlpha, netHeu, netInd, fitAlpha, fitHeu, fitInd, train_cs
 
   data = {"Activity" : activities, "Case_ID" : cases, 'Timestamp':time}
   df_SRet = pd.DataFrame(data=data)
-  
+
 
   if join:
     if sRet:
